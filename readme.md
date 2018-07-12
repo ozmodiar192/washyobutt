@@ -1,1 +1,1 @@
-This is my project for tinkering with various technologies
+This is my github project for tinkering.
