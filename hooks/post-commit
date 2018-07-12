@@ -1,0 +1,28 @@
+#!/usr/bin/env python
+#.git/hooks/post-commit
+
+#Imports
+
+## Use this to get the github commit message
+from subprocess import check_output
+## A user-friendly twitter api lib
+import tweepy
+## Going to read in my sensitive twitter credentials with configparser
+import configparser
+
+#Variables
+## Call out to check_output to get the last commit info
+commitmsg = check_output(["git", "log", "-1"])
+## Read in the twitter info from my private path (gitignored)
+config = configparser.ConfigParser()
+config.read("../private/twitter-api.properties")
+
+consumerkey=config.get('Consumer','ConsumerKey')
+consumersecret=config.get('Consumer','ConsumerSecret')
+accesstoken=config.get('Access','AccessToken')
+accesstokensecret=config.get('Access','AccessTokenSecret')
+auth = tweepy.OAuthHandler(consumerkey, consumersecret)
+auth.set_access_token(accesstoken, accesstokensecret)
+
+api = tweepy.API(auth)
+api.update_status(commitmsg)
