@@ -9,13 +9,21 @@ from subprocess import check_output
 import tweepy
 ## Going to read in my sensitive twitter credentials with configparser
 import configparser
+import os
 
 #Variables
 ## Call out to check_output to get the last commit info
 commitmsg = check_output(["git", "log", "-1"])
+myprecious = "private/twitter-api.properties"
 ## Read in the twitter info from my private path (gitignored)
 config = configparser.ConfigParser()
-config.read("../private/twitter-api.properties")
+if os.path.isfile(myprecious):
+    print('Loading sensitive data from ' + myprecious)
+    config.read(myprecious)
+else:
+    print('Couldn\'t find your properties file at ' + myprecious)
+print(os.getcwd())
+
 
 consumerkey=config.get('Consumer','ConsumerKey')
 consumersecret=config.get('Consumer','ConsumerSecret')
