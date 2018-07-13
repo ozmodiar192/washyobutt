@@ -1,2 +1,5 @@
 /notes
 /private
+*.tfvars
+*.tfstate*
+/terraform/.terraform
