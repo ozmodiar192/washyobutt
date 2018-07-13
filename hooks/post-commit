@@ -2,7 +2,6 @@
 #.git/hooks/post-commit
 
 #Imports
-
 ## Use this to get the github commit message
 from subprocess import check_output
 ## A user-friendly twitter api lib
@@ -13,8 +12,10 @@ import os
 
 #Variables
 ## Call out to check_output to get the last commit info
-commitmsg = check_output(["git", "log", "-1"])
-myprecious = "private/twitter-api.properties"
+commitMsg = check_output(["git", "log", "-1"])
+## my .ini formatted twitter data.  This needs to be relative to the root of your github project because the hooks won't traverse your whole file system.
+myPrecious = "private/twitter-api.properties"
+
 ## Read in the twitter info from my private path (gitignored)
 config = configparser.ConfigParser()
 if os.path.isfile(myprecious):
@@ -24,13 +25,14 @@ else:
     print('Couldn\'t find your properties file at ' + myprecious)
 print(os.getcwd())
 
+consumerKey=config.get('Consumer','ConsumerKey')
+consumerSecret=config.get('Consumer','ConsumerSecret')
+accessToken=config.get('Access','AccessToken')
+accessTokenSecret=config.get('Access','AccessTokenSecret')
+auth = tweepy.OAuthHandler(consumerKey, consumerSecret)
+auth.set_access_token(accessToken, accessTokenSecret)
 
-consumerkey=config.get('Consumer','ConsumerKey')
-consumersecret=config.get('Consumer','ConsumerSecret')
-accesstoken=config.get('Access','AccessToken')
-accesstokensecret=config.get('Access','AccessTokenSecret')
-auth = tweepy.OAuthHandler(consumerkey, consumersecret)
-auth.set_access_token(accesstoken, accesstokensecret)
-
+# Main 
+## Now we'll use tweepy to push my commit message
 api = tweepy.API(auth)
-api.update_status(commitmsg)
+api.update_status(commitMsg)
