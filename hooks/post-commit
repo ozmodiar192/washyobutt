@@ -18,7 +18,7 @@ myPrecious = "private/twitter-api.properties"
 
 ## Read in the twitter info from my private path (gitignored)
 config = configparser.ConfigParser()
-if os.path.isfile(myprecious):
+if os.path.isfile(myPrecious):
     print('Loading sensitive data from ' + myprecious)
     config.read(myprecious)
 else:
