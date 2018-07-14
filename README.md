@@ -8,26 +8,26 @@ My company seems to hire young and enthusiastic people.  It’s something I love
 
 So this is my newest technology project that won’t happen.  I bought the washyobutt.com domain on a lark about 6 months ago after watching the Public Enemy “I Can’t do Nuttin’ for Ya, Man” video on youtube.  I never really had any good use for the domain.  I still don’t, but that’s not going to stop me from building the most over-engineered, devopsy site I can.
 
-##Tweeting My Commits
+## Tweeting My Commits
 
 The first thing I did was register @washyobutt on twitter, though the website.
 
 ### About Git Hooks
-I wanted to post all my commit messages to Twitter for absolutely no reason other than dicking around with git hooks.  In git, you write code locally on your computer, then “commit” it to github, where it’s tracked and managed as part of the project.  A hook is a script that git executes automatically during the commit/push process.  When and where they run is customizable.  There are hooks for client side (hooks that run on your local machine) and server side (hooks that run on the github server).  The kind you need depends on what you’re trying to accomplish and what you need.
+I wanted to post all my commit messages to Twitter for absolutely no reason other than dicking around with git hooks.  In git, you write code locally on your computer, then “commit” it to github, where it’s tracked and managed as part of the project.  A hook is a script that git executes automatically during the commit/push process.  When and where they run is customizable.  There are hooks that run client side (on your local machine) and server side (hooks that run on the github server).  The kind you need depends on what you’re trying to accomplish and what you need.
 
 In my case goals are:
 * I want to publish my commit messages to twitter automatically
 * I want this hook to be checked in with my code, so I don’t have to re-write it or copy it to every machine I work on.
-* I want it to work in Mac, Linux, and Windows, since I use all three.
+* I want it to work in Mac, Linux, and Windows.
 
-Server side hooks are based around “push”, when you actually send your committed code up to github.  Client-side hooks are based around “commits”, which is where you tell your local git repository that something has changed and you want to keep it.  I usually work with ansible tower/awx, which pulls from git every time it  runs.  I’m used to committing and then pushing every change so I can test it.  Having a bunch of un-pushed commits isn’t going to work in that situation because unpushed code only exists locally, and awx is pulling from the github server.  With washyobutt, I can work locally and do my testing without constantly pushing.
+Server side hooks are based around “push”, when you actually send your committed code up to github.  Client-side hooks are generally based around “commits”, which is where you tell your local git repository that something has changed and you want to keep it.  I usually work with ansible tower/awx, which pulls from git every time it  runs.  I’m used to committing and then pushing every change so I can test it.  Having a bunch of un-pushed commits isn’t going to work in that situation because unpushed code only exists locally, and awx is pulling from the github server.  With washyobutt, I can work locally and do my testing without constantly pushing.
 
 In the spirit of how hooks work, I’m going to use client side hooks.  There are a few events where hooks are called.  In my case, I’m just pushing information around; I’m not enforcing any policies or affecting my commits in any way.  Therefore, my script will be post-commit.  I do the commit, git does whatever it does, and then the hook will run.
 
 Since I said I want my hooks to be portable, I should probably not write them in bash.  I use a mac for work, Ubuntu for projects, and Windows for my home PC.  I won’t be using my work laptop for this, but I’d like to have a hook that I can run on any computer I happen to be in front of.  I like python, and it’s platform independent, so I’m going to use that.  
 
 ### The Twitter API and OAuth
-I’m going to take a break from setting up the hooks to learn about the twitter API, since that’s what I’m going to be talking to.  Since I can’t open a browser and post my tweets, I need to send them directly through the twitter API.  To do this, I need to set up OAuth keys, which will allow me to authenticate with twitter.
+I’m going to take a break from setting up the hooks to learn about the twitter API, since that’s what I’m going to be talking to.  I don't want to open a browser and post my tweets, so I need to send them directly through the twitter API.  To do this, I need to set up OAuth keys, which will allow me to authenticate with twitter.
 
 #### The Keys
 
@@ -75,9 +75,9 @@ This is from the twitter API documentation; it’s wrapped here for readability.
  
 The consumer key we talked about above - that’s what tells Twitter which application I am.
 
-The nonce is a unique 32-character string that twitter uses to detect duplicate requests.  This needs to be random.  
+The nonce is a unique 32-character string that twitter uses to detect duplicate requests.  This needs to be random.
 
-The signature is where things start to get interesting.  This is used to verify your access, your user, and also let’s twitter tell if your request has been altered in transmission.  It’s a computed value based on a hash of the request and your secret information.  If you were to construct this, you’d take all the other parameters from both the http headers and the url, jam them all together and percent encode them.  Then you’d do the same with your sensitive information - your consumer secret and your oauth token secret.  Now you jam together your jammed together request and your jammed together secret sauce string, and run the whole shebang through a hashing algorithm to get a binary string, which you then convert base64.
+The signature is where things start to get interesting.  This is used to verify your access, your user, and also let’s twitter tell if your request has been altered in transmission.  It’s a computed value based on a hash of the request and your secret information.  If you were to construct this, you’d take all the other parameters from both the http headers and the url, jam them all together and percent encode them.  Then you’d do the same with your sensitive information - your consumer secret and your oauth token secret.  Now you feed your jammed together encoded request and your jammed together sensitive information through a hashing algorithm to get a binary string, which you then convert base64.  Twitter will create the same sensitve string and use the same hashing algorithm verify your request.
 
 The oauth signature method tells twitter what hashing algorithm you used to generate the signature.
 
@@ -118,7 +118,7 @@ That creates a public and a private key in my home .ssh directory, encrypted wit
 
 Now that I have a public (.pub!) key, I’ll add it to my github account under Profile > SSH and GPG keys.
 
-####A Quick Sidetask in Bash
+#### A Quick Sidetask in Bash
 Before I do that, I’m going to install xclip.  Xclip will let you copy terminal output directly to ubuntu’s clipboard.  Since 99% of what I do is copying and pasting, I’m going to use it a lot.
 ```
 sudo apt-get install xclip
@@ -130,12 +130,11 @@ By default, you need to middle click to paste from xclip because it goes to a di
 alias pbcopy=’xclip -selection clipboard’
 ```
 
-
-Why pbcopy?  I use a mac most of the time, and it’s the command in OSX to copy output to your clipboard.  I’m not smart enough to keep track of the platform I’m working on.
+Why pbcopy?  I use a mac most of the time, and it’s the command in OSX to copy output to your clipboard.  I’m not smart enough to keep track of the platform I’m working on.  If you were some kind of OS purist or had any principles at all, you'd probably just alias 'xclip' to 'xclip -selection clipboard'.
 
 
 #### Back to Github
-Now I’ll get my public key, and paste it into my github profile under “SSH Keys”.
+Now I’ll get my public key, and paste it into my github profile under “SSH Keys”.  Part of the reason I'm a stickler for xclip is that keys are sensitive to extra spaces and characters.  By using xclip, I'm sure I'm not dragging my mouse over an extra whitespace or grabbing part of my command prompt.
 
 ```
 cat ~/.wyb.pub | pbcopy
@@ -167,7 +166,7 @@ git commit -m “Initial edits to readme.md”
 
 So I have my file added, and I told git it’s something I want to commit.  Now I need to push it up to github.
 
-The main branch in git is called “Master”.  Right now I’m working on master, but eventually when I’m adding new functionality, I’ll probably branch, but for the time being I need to tell git that I want this to go on the master branch.
+The main branch in git is called “Master”.  Right now I’m working on master, but eventually, when I’m adding new functionality, I’ll probably branch.  For the time being I need to tell git that I want this to go on the master branch.
 ```
 git push --set-upstream origin master
 ```
@@ -175,39 +174,16 @@ That means push it, and set it up to go to the master branch of origin, which yo
 
 Now I’m able to get stuff into github.
 
-###Writing the hook
-I’m going to break this up into two sections - getting a hook, written in python, that works and gets my last commit message, and then building out the twitter api stuff.
+### Setting up Python and Writing the hook
+I’m going to break this up into two sections - Writing a hook in python that gets my last commit message, and then building out the twitter api stuff.
 
-By default, hooks are stored in the .git/hooks directory.  There’s some samples in there.  Since my goal with wyb is to build a complex, totally over-engineered website, I want to include the hooks in the actual source code.  Therefore, I’ll create a hooks directory in my project, and then symlink it to the .git/hooks directory.  
+Hooks are stored in, and run out of, the .git/hooks directory, which doesn't get checked in.  There’s some samples in there when you create you project.  I want to include the hooks in the actual source code because I want to have all the ridiculous work I did available.  Therefore, I’ll create a hooks directory in my project, and then symlink it to the .git/hooks directory.  
 
-The downside here is that I’ll need to remember to do this every time I check out the project.  I may go back and find a very complicated solution to this simple problem later.  For now:
-```
-mkdir ~/Projects/wyb/hooks
-cp ~/Projects/wyb/.git/hooks/* ~/Projects/wyb/hooks 
-rm -rf ~/Projects/wyb/.git/hooks 
-cd ~/Projects/wyb/.git
-ln -s ../hooks .
-```
-I make the hooks directory, copied the samples out, nuked the built-in hooks directory, and then linked my hooks to the git hooks directory.  Now I can work in my hooks dir, and the files will automatically be in the .git/hooks directory where the hooks are executed from.
+The downside here is that I’ll need to remember to do this every time I check out the project.  I may go back and find a very complicated solution to this simple problem later.  For now I'll move the built-in samples from the /.git/hooks directory to /hooks, and then link /hooks back to /.git/hooks.
 
 I determined earlier that I’d use a post-commit hook, so my file needs to be named post-commit.  You can’t name the hook whatever you want, which is a bummer because thetwittercommitter has a nice ring to it.  Also note that you can’t have a file extension.
 
-Here’s my initial stab at a hook.  Since everything will be in github, I won't paste it in here, but this is a transitory file to show the basic idea.
-```
-#!/usr/bin/env python
-#.git/hooks/post-commit
-from subprocess import check_output
-
-commitmsg = check_output(["git", "log", "-1"])
-print(commitmsg)
-Print len(commitmsg)
-```
-
-It uses the python subprocess check_output command to execute and get the output from the git command “git log -1”, which shows the last commit.  I also write out the length because I want to make sure my commit messages are less than the 280 character limit of twitter.  This is just my placeholder, so I’ll handle the output later.  I tested this and it worked fine.
-
-So now I need to get talking to twitter.  I had previous thought about doing this all from scratch using the built-in Python urllib, but there are so many twitter api libs for python it seems stupid and inefficient to reinvent the wheel.
-
-####Setting up Virtualenv
+#### Setting up Virtualenv
 
 Python 2.7 is on my laptop already, but I want to set up virtualenv.  VirtualEnv lets you manage different python installations; I highly recommend it.  I already have the python package manager, pip, installed.  If you don't, the package is something like python-pip.
 
@@ -233,6 +209,8 @@ The thing I don’t like is that virtual env adds the name to my terminal prompt
 
 To get rid of that, I’ll comment out the section in the activate script that references PS1, which is the default prompt.  I’ll re-source the file, and it goes away.  Now I can run pip without sudo.
 
+#### Installing the Python Libraries
+
 ```
 pip install tweepy
 ```
@@ -241,6 +219,21 @@ I also want to store my sensitive shit in a properties file in my private direct
 ```
 pip install configparser
 ```
+
+Here’s my initial stab at a hook.  Since everything will be in github, I won't paste it in here, but this is a transitory file to show the basic idea.
+```
+#!/usr/bin/env python
+#.git/hooks/post-commit
+from subprocess import check_output
+
+commitmsg = check_output(["git", "log", "-1"])
+print(commitmsg)
+Print len(commitmsg)
+```
+
+It uses the python subprocess check_output command to execute and get the output from the git command “git log -1”, which shows the last commit.  I also write out the length because I want to make sure my commit messages are less than the 280 character limit of twitter.  This is just my placeholder, so I’ll handle the output later.  I tested this and it worked fine.
+
+So now I need to get talking to twitter.  I had previous thought about doing this all from scratch using the built-in Python urllib, but there are so many twitter api libs for python it seems stupid and inefficient to reinvent the wheel.
 
 The working script is up at github.  My sensitive data file is formatted like this, for your reference:
 ```
@@ -258,15 +251,15 @@ AccessTokenSecret=mytokensecret
 ```
 
 
-##AWS
+## AWS
 Now I need to actually start building something.  It seems like everyone uses aws, so I’ll start there.  At this time, I’m going to spin up a single instance, but I’m going to do everything in terraform because that’s what people on stackoverflow do.
 
 ### Terraform
 Terraform is a way to represent your aws infrastructure as code.  It seems more complicated than it is; I’ve found it be pretty easy to use once you get going.
 
-I have an aws account already, but I don’t have my api keys.  Terraform is going to talk to the api, so it needs keys similar to what I used for the Twitter api, only there’s no consumer key because there’s only one ec2 api.
+I have an aws account already, but I don’t have my api keys.  Terraform is going to talk to the api, so it needs keys similar to what I used for the Twitter api, only there’s no consumer key because there’s only one ec2 application.
 
-I’ll get them from my profile under My Security Credentials.  Again, I don’t want them in github, so I’ll put them in a  tfvars file, and add *.tfvars to my .gitignore file:
+I’ll get them from my profile under My Security Credentials.  Again, I don’t want them in github, so I’ll put them in a tfvars file named terraform.tfvars, and add \*.tfvars to my .gitignore file:
 ```
 \notes
 \private
@@ -278,13 +271,13 @@ The file is in terraform/terraform.tfvars and looks like this:
 accessKey = "myAccessKeyRightHere"
 secretKey = "SuperSecretKeyRightHere"
 ```
-The other option is not specify aws credentials, and store them in .aws/credentials, but I think I want to keep them in the project to have everything self contained.
+The other option is not specify aws credentials, and store them in .aws/credentials.  Terraform checks there by default, but I think I want to keep them in the project to have everything self contained.
 
 You can’t just reference the tfvars directly.  You need to tell Terraform that they’re vars, so I’ll put the names into vars.tf.  I’m going to use vars.tf for all my variables, and any data that I’m pulling in externally and referencing later.  You can structure terraform however you want, because it’s smart enough to find all your references no matter where you store them.  
 
 Before I start spinning shit up, I want to add a keypair and security rules so I can actually connect to these instances.  Eventually I’m hoping I won’t need to.
 
-As you recall, I already generated a keypair for github.  If I use it for both github and AWS, and someone gets access to my private key file, they could then not only fuck with my github repo a bit, but they could get on my ec2 instances as well.  That sounds like bad news, but I’m not really storing these private keys anywhere except my laptop(s).  I’m not putting them on a shared drive or anything.  So, if someone got access to one, they’d likely have access to all of them anyway since they’re all hanging out in my .ssh directory.  If I had put passphrases on my keys, it might be a different story since there would be a layer of protection there, although ssh key passphrases could probably be brute forced pretty easily.
+As you recall, I already generated a keypair for github.  If I use it for both github and AWS, and someone gets access to my private key file, they could then not only fuck with my github repo a bit, but they could get on my ec2 instances as well.  That sounds like bad news, but I’m not really storing these private keys anywhere except my laptop.  I’m not putting them on a shared drive or anything.  So, if someone got access to one, they’d likely have access to all of them anyway since they’re all hanging out in my .ssh directory.  If I had put passphrases on my keys, it might be a different story since there would be a layer of protection there, although ssh key passphrases could probably be brute forced pretty easily.
 
 That paragraph might sound like my way of saying “fuck it”, but at least for now, wyb doesn’t have anything sensitive anyway so it doesn’t matter.  I try to think through security, even though I sometimes take the lazy way out.  “What if someone got this key?  What could they do?”  is a good question to continually ask yourself.  In this case, the answer is “break my website that doesn’t exist anyway” and “check more shitty code into my shitty code repository”.
 
@@ -310,7 +303,7 @@ terraform show
 ```
 To get the public dns of my instance, I can log into it with
 ```
-ssh -i ~/.ssh/wyb.pub ubuntu@<myPublicDnsThatIJustGotFromTeraformShow>
+ssh -i ~/.ssh/wyb ubuntu@<myPublicDnsThatIJustGotFromTeraformShow>
 ```
 
 Things are coming together nicely, however terraform has left it’s state files in my directory.  Terraform maintains the state in static files by default.  That’s fine if you’re like me; a single dude (ladies?) working solo on a small project.  I could safely add them to .gitignore and continue on my merry way, but I saw an article the other day that said “Why You Should Be Using Remote State in Terraform”.  I didn’t read it, but I can only assume the author made a compelling argument.
