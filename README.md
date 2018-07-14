@@ -13,7 +13,7 @@ So this is my newest technology project that won’t happen.  I bought the washy
 The first thing I did was register @washyobutt on twitter, though the website.
 
 ### About Git Hooks
-I wanted to post all my commit messages to Twitter for absolutely no reason other than dicking around with git hooks.  In git, you write code locally on your computer, then “commit” it to github, where it’s tracked and managed as part of the project.  A hook is a script that git executes automatically during the commit/push process.  When and where they run is customizable.  There are hooks that run client side (on your local machine) and server side (hooks that run on the github server).  The kind you need depends on what you’re trying to accomplish and what you need.
+I wanted to post all my commit messages to Twitter for absolutely no reason other than dicking around with git hooks.  In git, you write code locally on your computer, then “commit” it, and push it to github where it’s made available.  A hook is a script that git executes automatically during the commit/push process.  When and where they run is customizable.  There are hooks that run client side (on your local machine) and server side (hooks that run on the github server).  The kind you need depends on what you’re trying to accomplish and what you need.
 
 In my case goals are:
 * I want to publish my commit messages to twitter automatically
@@ -77,7 +77,7 @@ The consumer key we talked about above - that’s what tells Twitter which appli
 
 The nonce is a unique 32-character string that twitter uses to detect duplicate requests.  This needs to be random.
 
-The signature is where things start to get interesting.  This is used to verify your access, your user, and also let’s twitter tell if your request has been altered in transmission.  It’s a computed value based on a hash of the request and your secret information.  If you were to construct this, you’d take all the other parameters from both the http headers and the url, jam them all together and percent encode them.  Then you’d do the same with your sensitive information - your consumer secret and your oauth token secret.  Now you feed your jammed together encoded request and your jammed together sensitive information through a hashing algorithm to get a binary string, which you then convert base64.  Twitter will create the same sensitve string and use the same hashing algorithm verify your request.
+The signature is where things start to get interesting.  This is used to verify your access, your user, and also let’s twitter tell if your request has been altered in transmission.  It’s a computed value based on a hash of the request created with your secret information.  If you were to construct this, you’d take all the other parameters from both the http headers and the url, jam them all together and percent encode them.  Then you’d do the same with your sensitive information - your consumer secret and your oauth token secret.  Now you feed your jammed together encoded request and your jammed together sensitive information through a hashing algorithm to get a binary string, which you then convert base64.  Twitter will create the same sensitve string and use the same hashing algorithm verify your request.
 
 The oauth signature method tells twitter what hashing algorithm you used to generate the signature.
 
@@ -94,8 +94,10 @@ Now that I understand the twitter API and I have my keys, I need to start on the
 First I’m going to need a git repository.  I’ll start by initializing a new project in git with git init. 
 ```
 mkdir -p ~/Projects/wyb
+cd !$ 
 git init
 ```
+!$ is my favorite bash shortcut.  It's a built-in for the last argument of your previous command.  In the example above it would exand to cd ~/Projects/wyb.  Very useful.
 
 I want to keep all my shit in one place (~/Projects/wyb), so I’ll use this for the whole project.  However “all my shit” includes sensitive data like api keys and a directory of misc notes and templates for my own reference, so I better create a .gitignore file in my project so I don’t end up checking it in.
 
@@ -228,7 +230,7 @@ from subprocess import check_output
 
 commitmsg = check_output(["git", "log", "-1"])
 print(commitmsg)
-Print len(commitmsg)
+print(len(commitmsg))
 ```
 
 It uses the python subprocess check_output command to execute and get the output from the git command “git log -1”, which shows the last commit.  I also write out the length because I want to make sure my commit messages are less than the 280 character limit of twitter.  This is just my placeholder, so I’ll handle the output later.  I tested this and it worked fine.
@@ -259,21 +261,16 @@ Terraform is a way to represent your aws infrastructure as code.  It seems more 
 
 I have an aws account already, but I don’t have my api keys.  Terraform is going to talk to the api, so it needs keys similar to what I used for the Twitter api, only there’s no consumer key because there’s only one ec2 application.
 
-I’ll get them from my profile under My Security Credentials.  Again, I don’t want them in github, so I’ll put them in a tfvars file named terraform.tfvars, and add \*.tfvars to my .gitignore file:
-```
-\notes
-\private
-*.tfvars
-```
+I’ll get them from my profile under My Security Credentials.  Again, I don’t want them in github, so I’ll put them in a tfvars file named terraform.tfvars, and add \*.tfvars to my .gitignore file
 
-The file is in terraform/terraform.tfvars and looks like this:
+The secret vars file is in terraform/terraform.tfvars and looks like this:
 ```
 accessKey = "myAccessKeyRightHere"
 secretKey = "SuperSecretKeyRightHere"
 ```
-The other option is not specify aws credentials, and store them in .aws/credentials.  Terraform checks there by default, but I think I want to keep them in the project to have everything self contained.
+The other option is not specify aws credentials, and store them in ~/.aws/credentials.  Terraform checks there by default, but I think I want to keep them in the project to have everything self contained.
 
-You can’t just reference the tfvars directly.  You need to tell Terraform that they’re vars, so I’ll put the names into vars.tf.  I’m going to use vars.tf for all my variables, and any data that I’m pulling in externally and referencing later.  You can structure terraform however you want, because it’s smart enough to find all your references no matter where you store them.  
+You can’t just reference the tfvars directly; you need to set them actual variables in Terraform. I’ll put them into vars.tf.  I’m going to use vars.tf for all my variables, and any data that I’m pulling in externally and referencing later.  You can structure terraform however you want, because it’s smart enough to find all your references no matter where you store them.  
 
 Before I start spinning shit up, I want to add a keypair and security rules so I can actually connect to these instances.  Eventually I’m hoping I won’t need to.
 
@@ -281,7 +278,7 @@ As you recall, I already generated a keypair for github.  If I use it for both g
 
 That paragraph might sound like my way of saying “fuck it”, but at least for now, wyb doesn’t have anything sensitive anyway so it doesn’t matter.  I try to think through security, even though I sometimes take the lazy way out.  “What if someone got this key?  What could they do?”  is a good question to continually ask yourself.  In this case, the answer is “break my website that doesn’t exist anyway” and “check more shitty code into my shitty code repository”.
 
-I could manually put this keypair into amazon and then associate it with instance when it comes up, but I want to create the keypair as part of my terraform job.  I created another new terraform file called “security.tf” where I’ll create all my security-related stuff.  Since my public key is public, I can put it right into terraform, in my vars file.
+I could manually put this keypair into the Amazon EC2 console and then associate it with instance when it comes up, but I want to create the keypair as part of my terraform job.  I created another new terraform file called “security.tf” where I’ll create all my security-related stuff.  Since my public key is public, I can put it right into terraform, in my vars file.
 
 Now that I’ve got my key situation squared away, I also need a security group.  Security groups are pretty-much firewall rules for the ec2 instances.  Right now I’m going to use short-lived instances and log in manually, so I’ll need to open ssh (port 22).  
 
