@@ -16,8 +16,8 @@ resource "aws_security_group" "allow_ssh" {
 }
 
 # Create my keypair for access to the box
-resource "aws_key_pair" "wyb" {
-  key_name = "wyb"
+resource "aws_key_pair" "wyb_public" {
+  key_name = "wyb.pub"
   public_key = "${var.publicKey}"
 }
 

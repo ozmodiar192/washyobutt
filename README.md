@@ -257,7 +257,7 @@ AccessTokenSecret=mytokensecret
 Now I need to actually start building something.  It seems like everyone uses aws, so I’ll start there.  At this time, I’m going to spin up a single instance, but I’m going to do everything in terraform because that’s what people on stackoverflow do.
 
 ### Terraform
-Terraform is a way to represent your aws infrastructure as code.  It seems more complicated than it is; I’ve found it be pretty easy to use once you get going.
+Terraform is a way to represent your aws infrastructure as code.  It seems more complicated than it is; I’ve found it be pretty easy to use once you get going.  Between the aws docs and the terraform documentation, it's pretty easy to figure out what everything does.
 
 I have an aws account already, but I don’t have my api keys.  Terraform is going to talk to the api, so it needs keys similar to what I used for the Twitter api, only there’s no consumer key because there’s only one ec2 application.
 
@@ -284,7 +284,23 @@ Now that I’ve got my key situation squared away, I also need a security group.
 
 I could open it up to the world and rely on the security of my private key but that’s boring, so I’ll get my external IP address with a terraform http data source in my vars.tf file, which will call out to icanhazip.com to get my local machine’s external IP.  I love icanhazip.com; it returns your ip address with no extra formatting or bullshit.  I think it has a carriage return in it, though, so had to use the terraform chomp filter on it.  This may not be very sustainable for the long term, but since I’m dicking around at home and tearing things down right away, it’s a fun way to do it for now.  “Fun” being a very relative term.
 
-Now I can create an entry for my ec2 instance, making sure to reference my key pair and security group.  This is in ec2.tf, along with the provider definition for aws that reads in my credentials.
+Now I can create an entry for my ec2 instance, making sure to reference my key pair and security group.  This is in ec2.tf, along with the provider definition for aws that reads in my credentials.  I'll quickly go over the terraform syntax for this ec2 instance.
+
+```
+resource "aws_instance" "wyb-singleton" {
+  ami             = "ami-2757f631"
+  instance_type   = "t2.nano"
+  key_name        = "wyb.pub"
+  security_groups = ["allow_ssh"]
+  tags {
+    application = "washyobutt"
+  }
+}
+
+```
+The first line is telling terraform I want to create an aws_instance with a name of "wyb-singleton".  The types are all available in the terraform documents. The name is the name that terraform will use to reference the resource.  Some resources have both the terraform name, and a name for EC2 (like my security policy).  You can name them however you want.  Within the brackets are the configuration parameters for the resource type you're creating.  There are usually lots, and you can find them in the documentation.  Finally, you have 'tags', which are a way to organize your hosts within EC2.  You can use tags for filtering your resources, and also for billing.  I just gave mine a generic tag called "application" with a value of "washyobutt".
+
+
 
 So if I run this, it works!
 ```
@@ -308,3 +324,71 @@ Things are coming together nicely, however terraform has left it’s state files
 The main reason you’d want to mess around with the terraform state files is if you’re working on a project with other people.  Terraform needs that state file to be accurate, so you have to treat it with care.  If Sue Developer is trying to build with terraform the same time as Jane Developer, it’s going to go badly.  You can’t track it with git because you have no idea if someone else has updated the environment.
 
 Luckily, we can use Amazon s3 to store our state file.  And we can create the s3 bucket with terraform.
+
+#### Setting Up Terraform State
+
+The high-level process for this is to create an s3 bucket, then tell terraform to store it's state there.  S3 is Amazon's file storage service.  They call an S3 object a "bucket", and that's a useful way to think of it. Once I have my state stored remotely, I'll set it up to use locking because that's what a lot of real people do.  If you have multiple people using terraform, you would want your state to lock so people can't fuck it up by running things simultaneously. Since I'm doing this solo, I'll have to find some other way to fuck it up.
+
+I'm trying to keep this project cheap, so the idea of having a persistent s3 bucket out there is off-putting to me.  However, the tfstate is tiny, so if it costs anything at all, it'll be negligable.
+
+It's a simple process to set this up; the best guide is https://medium.com/@jessgreb01/how-to-terraform-locking-state-in-s3-2dc9a5665cb6, but I'm going to do my best to complicate it.
+
+## AWS IAM Setup
+While looking into Bucket policies that I might want to add, I realized that my Amazon AWS account is set up with a root user only.  The root user is the one I use to sign to the AWS console.  Amazon recommends that you not use the root user for anything other than setting up IAM.  IAM is Identity and Access Management.  I'm going to implement a very simple IAM setup.
+
+Log in to the amazon AWS console at https://console.aws.amazon.com and find the Security, Identity, and Compliance section.  Under there, click on IAM.  You'll see a handy little checklist that explains all the ways you suck at security; "Delete your root access keys", "Activate MFA", etc.  For now, I'm just going to create my IAM user and worry about making the Security Status thing happy later.
+
+Click on Users, and add a user.  I'm going to name mine terraform.  I'm going to give it Programmatic Access because I don't want anyone fucking around in the console with the terraform user.  Once you start using terraform, you've sold your soul to it; you don't want to do some shit manually and some shit in the console because it'll create drift and fuck up your state.  You can import things to terraform that you created manually, but that's a sucker's game.
+
+I'll create a group for "api-full-access" and assign the built-in AmazonECFullAccess and AmazonS3FullAccess policies.  Amazon will provide the access and secret keys, which I can update in my private information store and tfvars.  If you were inclined, you could construct a very detailed policy around terraform, but I have no need for that now.  My goal is to understand conceptually without doing a whole bunch of legwork.
+
+In the spirit of IAM, I'll also create an administrative user and an administrator group with the "AdministratorAccess" policy.  I gave this group access to the console as well as the api.  From now on, I'll use this user to sign into the console.
+
+This has knocked out two tasks on my security status checklist in the IAM section of the aws console; I may as well finish it off by creating an IAM password policy, setting up MFA on my root account, and nuking my root account access tokens.  I clicked on Apply and IAM password policy and then used the "Manage Password Policy" button.  I used good ol' fashioned common sense and created a password policy that will work for me.
+
+To setup MFA and delete the access keys from my root account, so I signed out of my IAM account and back in with root, and went back to the iam section of the console and followed the prompts in the checklist. 
+
+I decided I'd manage at least the initial two users outside of terraform.  It would be a tall order to make terraform create the user that runs terraform, and I don't really want to fuck with my administrative console user with terraform.  If I were inclined, I could import these resources into terraform and allow terraform to manage them (terraform import aws_iam_user.wybmatt wybmatt).  If I ever need more users, I'll manage them with terraform.
+
+#### Back to S3
+
+To set up my remote state bucket, I created an S3 bucket and then defined it as the backend for terraform.  I put this in a file called setup.tf; that's where I'm going to store all my terraform configuration stuff.  I also moved the aws provider in there.  I also followed Jessica G's advice and created a dynamo db table for state.
+
+#### Dynamo DB
+
+DynamoDB is an Amazon service.  There are roughly a billion different amazon services, and I'm going to try to use as many of them as I can.  By doing this, it'll allow me to name drop them in casual conversation with my nerd friends, and I'll list them as skills on my LinkedIn profile even though my understanding of them is rudimentary at best, negligent at worst.
+
+DynamoDB is non-relatiional database service.  Traditional databases like Oracle and SQL Server are relational; they store data in columns and rows in tables.  I might have a table for users, and each user will have an ID that serves as the primary key for that user.  A primary key is a unique value for each row that serves as the main identifier for that resource.   I can then link that user to other tables in the database, like "email addresses" and "wrongs committed against me" by using the primary key.  The user ID then becomes the "foreign key" of the "wrongs" and "email address" table, and the relationship is maintained.
+
+A non-relational database, or a nosql database, doesn't give a shit about maintaining relationships between data.  They store data in a variety of ways; in the case of DynamoDB, there are still tables, but instead of the tables being linked, they're inclusive lists of attributes.  Using my example above, I would have a table called "users", but the "users" table would contain attributes for "ID", "email address" and "wrongs commited against me".  This is a little more intuitive and more flexible, since I can really have any information I want in the table.  I can note that Barry smells like tortilla chips, and that Andrew has a geographic tounge without the overhead of creating tables for "smells" and "upsetting personal attributes".  Note that there is still one requirement; each record still uses a primary key!
+
+Which brings me to what started me down this road - figuring out why the "hash key" for the terraform DynamoDB table I'm creating has to be "LockID".  Hash key and Partition key are the same thing - they're types of primary keys.  Terraform is written to look for a DynamoDB record with a primary key of LockID.
+
+I also had to check why I need a type of "S", but that was a simpler concept.  S is for String, N is for Number, and B is for binary data.
+
+#### Terraform Remote State Sucks
+
+I commented out the backend configuration from my setup.tf, ran a terraform apply to create the S3 bucket and dynamoDB table, then uncommented out the backend.  I had to go back to my IAM user and add the AmazonDynamoDBFullAccess policy, but otherwise it went smoothly.
+
+To reinitialize the backend, I had to run terraform init again, but it failed spectacularly due to a bug in Terraform.  Apparently the backend configuration doesn't use the same code as the rest of terraform, and it was failing on my security keys, which you recall I'm storing in a terraform.tfvars file that I have secured and gitignored.  It seems like the two options here are:
+1) Put my credentials directly into the terraform setup.tf file
+2) Put my credentials directly into the terraform init commmand
+
+I did the latter, but this is yet another manual step I'll have to do if I ever change laptops or bring in more members on the Washyobutt team.  If you're a security-minded person, you would also edit your ~/.bash_history file and delete the commands containing your sensitive info from your history.
+```
+ terraform init -backend-config="access_key=MYACCESSKEYISMYOWNBUSINESS" -backend-config="secret_key=ThIsI5mYAc355K3YRiGh7H3R3F3LLA"
+```
+
+The good news is that this worked, the bad news is that it kind of sucks.  The problem comes when I want to destroy.  I specified 
+```
+    lifecycle {
+      prevent_destroy = true
+    }
+```
+on my S3 bucket, which is a smart thing to do.  However, when Terraform encounters this, it doesn't just skip destroying it.  It exits and errors and stops processessing.  That's not what I want; I want to freely destroy without breaking my state file.  I tried removing prevent_destroy and that was an even bigger disaster; it couldn't unlock the state file (because I deleted it) and I had to convert back to local state in order to clean it all up.
+
+If you're working on something that you're not tearing down, you wouldn't have an issue here.  You could just plunk along, happily adding infrastructure and updating your shared, locking, badass tfstate files.  But the thought of my singluar nano-sized EC2 instance out there, robbing me of pennies every month, has my jimmies sufficiently rustled.
+
+What to do now?  I think I'll create a subset of my terraform scripts with just the state backend setup shit, and then import the state into my main terraform setup.  I could also explicitly tell terraform to target certain types of resources, but as my project grows it'll be a pain in the ass to maintain.  If I could do an exclude on my setup.tf resources, or if terraform just continued on rather than exiting when it encountered my prevent_destroy stuff, I'd be fine.
+
+But I'm not fine.
