@@ -1,3 +1,4 @@
+# Configure access to AWS as my provider
 provider "aws" {
   access_key = "${var.accessKey}"
   secret_key = "${var.secretKey}"
@@ -35,7 +36,7 @@ resource "aws_dynamodb_table" "wyb_tf_state_table" {
   }
 }
 
- create a terraform backend that uses the S3 bucket.
+# create a terraform backend that uses the S3 bucket.
 terraform {
  backend "s3" {
  encrypt = true
