@@ -1,4 +1,4 @@
-# create a terraform backend that uses the S3 bucket.  This is what actually stores the state
+# Define the manually-configured s3 and dynamodb tables as the state backend
 terraform {
  backend "s3" {
  encrypt = true
