@@ -20,4 +20,3 @@ resource "aws_key_pair" "wyb_public" {
   key_name = "wyb.pub"
   public_key = "${var.publicKey}"
 }
-

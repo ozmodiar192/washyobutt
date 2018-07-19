@@ -392,3 +392,13 @@ If you're working on something that you're not tearing down, you wouldn't have a
 What to do now?  I think I'll create a subset of my terraform scripts with just the state backend setup shit, and then import the state into my main terraform setup.  I could also explicitly tell terraform to target certain types of resources, but as my project grows it'll be a pain in the ass to maintain.  If I could do an exclude on my setup.tf resources, or if terraform just continued on rather than exiting when it encountered my prevent_destroy stuff, I'd be fine.
 
 But I'm not fine.
+
+#### Fixing Remote State
+
+I spent a bunch of time trying to make remote state work.  My goal was to have the state infrastructure defined in terraform, but it just wasn't in the cards.  First I tried creating a new directory where I put only the state-related infrastructure (the s3 bucket, the dynamoDB table, and a backend for state).  That worked, until it came time to apply the rest of my infrastructure.  The issue was that the backend was now servicing two distinct terraform directories, so when I did "terraform plan" in my directory, it flagged my infrastructure shit for deletion because it was in the state file, but not defined in my current working directory.
+
+I considered importing the objects, but that won't work either, because importing something puts it under the management of terraform.  That would put me right back to my original problem; I don't want to tear down my state-related infrastructure when I'm tearing down everything else.  I tried using different keys, but that didn't seem to work.  The "key" should be the path within the bucket where things are stored, but I wasn't sure how that works when you're using DynamoDB, and I honestly didn't spend a lot of time on it.
+
+Eventually, I bit the bullet and manually created the dynamoDB table and S3 bucket in the console.  Then I defined the backend in terraform in my backend.tf file, and everything worked fine.  That leaves my S3 bucket and DynamoDB table out there, totally isolated from terraform, as long as I never import them.  I honestly think this is the best way to do it, even though I consider it a minor compromise to my intention of creating a fully self-contained infrastructure.  
+
+Again, this would all work handily if you the terraform lifecycle option "prevent_destroy" just skipped a resource instead of blowing up and exiting.
