@@ -2,4 +2,4 @@
 /private
 *.tfvars
 *.tfstate*
-/terraform/.terraform
+/terraform/vpc_public/.terraform
