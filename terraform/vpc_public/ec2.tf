@@ -8,4 +8,23 @@ resource "aws_instance" "wyb-singleton" {
   tags {
     Name                      = "washyobutt"
   }
+  provisioner "file" {
+    source      = "../../private/wyb_deploy"
+    destination = "/home/ubuntu/.ssh/wyb_deploy"
+    connection {
+      type        = "ssh"
+      user        = "ubuntu"
+      private_key = "${file("/home/matt/.ssh/wyb")}"
+    }
+  }
+  provisioner "remote-exec" {
+    inline = [
+      "chmod 600 /home/ubuntu/.ssh/wyb_deploy"
+    ]
+    connection {
+      type        = "ssh"
+      user        = "ubuntu"
+      private_key = "${file("/home/matt/.ssh/wyb")}"
+    }
+  }
 }

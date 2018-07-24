@@ -1,4 +1,5 @@
 # washyobutt
+
 ## Introduction
 Lately my job has been writing ansible to install and configure Weblogic, JBoss, Endeca, and apache environments for customers who run ecommerce sites based on Oracle Commerce, or ATG.  It’s a fine job; I’ve gotten comfortable with ansible and I’ve learned some things along the way.
 
@@ -6,25 +7,25 @@ Recently my whole team congregated at our corporate office.  Most of us are remo
 
 My company seems to hire young and enthusiastic people.  It’s something I love about it.  During our annual powow, I noticed was almost everyone had a big idea for how the team should function; some new method of dealing with work, some way to push our offering into the future.  Some of them will blossom beautifully into existence, and some are what you can only call Devops fanfiction.  I’ve had enough of these ideas to know that most of them won’t happen.
 
-So this is my newest technology project that won’t happen.  I bought the washyobutt.com domain on a lark about 6 months ago after watching the Public Enemy “I Can’t do Nuttin’ for Ya, Man” video on youtube.  I never really had any good use for the domain.  I still don’t, but that’s not going to stop me from building the most over-engineered, devopsy site I can.
+So this is my newest technology project that won’t happen - a website that does nothing, yet manages to use as many technologies as I can cram in.  I bought the washyobutt.com domain on a lark about 6 months ago after watching the Public Enemy “I Can’t do Nuttin’ for Ya, Man” video on youtube.  I highly recommend it.  I never really had any good use for the domain.  I still don’t, but that’s not going to stop me from building the most over-engineered, devopsy site I can.
 
 ## Tweeting My Commits
 
 The first thing I did was register @washyobutt on twitter, though the website.
 
 ### About Git Hooks
-I wanted to post all my commit messages to Twitter for absolutely no reason other than dicking around with git hooks.  In git, you write code locally on your computer, then “commit” it, and push it to github where it’s made available.  A hook is a script that git executes automatically during the commit/push process.  When and where they run is customizable.  There are hooks that run client side (on your local machine) and server side (hooks that run on the github server).  The kind you need depends on what you’re trying to accomplish and what you need.
+I wanted to post all my commit messages to Twitter for absolutely no reason other than dicking around with git hooks.  In git, you write code locally on your computer, then commit it, and push it to github where it’s made available.  A hook is a script that git executes automatically during the commit/push process.  When and where they run is customizable.  There are hooks that run client side (on your local machine) and server side (hooks that run on the github server).  The kind you need depends on what you’re trying to accomplish and what you need.
 
 In my case goals are:
 * I want to publish my commit messages to twitter automatically
 * I want this hook to be checked in with my code, so I don’t have to re-write it or copy it to every machine I work on.
 * I want it to work in Mac, Linux, and Windows.
 
-Server side hooks are based around “push”, when you actually send your committed code up to github.  Client-side hooks are generally based around “commits”, which is where you tell your local git repository that something has changed and you want to keep it.  I usually work with ansible tower/awx, which pulls from git every time it  runs.  I’m used to committing and then pushing every change so I can test it.  Having a bunch of un-pushed commits isn’t going to work in that situation because unpushed code only exists locally, and awx is pulling from the github server.  With washyobutt, I can work locally and do my testing without constantly pushing.
+Server side hooks are based around “push”, when you actually send your committed code up to github.  Client-side hooks are generally based around “commits”, which is where you tell your local git repository that something has changed and you want to keep it.  I usually work with ansible tower/awx, which pulls from git every time it  runs.  I’m used to committing and then pushing every change so I can test it.
 
-In the spirit of how hooks work, I’m going to use client side hooks.  There are a few events where hooks are called.  In my case, I’m just pushing information around; I’m not enforcing any policies or affecting my commits in any way.  Therefore, my script will be post-commit.  I do the commit, git does whatever it does, and then the hook will run.
+In the spirit of how hooks work, I’m going to use client side hooks.  There are a few events where hooks are called.  In my case, I’m just pushing information around; I’m not enforcing any policies or affecting my commits in any way, so I decided to use a post-commit hook.
 
-Since I said I want my hooks to be portable, I should probably not write them in bash.  I use a mac for work, Ubuntu for projects, and Windows for my home PC.  I won’t be using my work laptop for this, but I’d like to have a hook that I can run on any computer I happen to be in front of.  I like python, and it’s platform independent, so I’m going to use that.  
+Since I said I want my hooks to be portable, I should probably not write them in bash.  I use a Mac for work, Ubuntu for projects, and Windows for my home PC.  I won’t be using my work laptop for this, but I’d like to have a hook that I can run on any computer I happen to be in front of.  I like python, and it’s platform independent, so I’m going to use that.  
 
 ### The Twitter API and OAuth
 I’m going to take a break from setting up the hooks to learn about the twitter API, since that’s what I’m going to be talking to.  I don't want to open a browser and post my tweets, so I need to send them directly through the twitter API.  To do this, I need to set up OAuth keys, which will allow me to authenticate with twitter.
@@ -33,17 +34,17 @@ I’m going to take a break from setting up the hooks to learn about the twitter
 
 To get the keys and create the application, you go to https://apps.twitter.com/ and sign in with your twitter account.  There’s a big-ass “Create new App” button.  Press that and you’ll get a setup form.  I filled it out, but left callback URL empty because I don’t want Twitter to return me to any site in particular.
 
-Once you create your app, you’ll see your Consumer Key.  The twitter API uses oauth.  The concepts I’m talking about apply to oauth-based api’s, although the exact terminology may differ slightly.  
+The twitter API uses oauth.  The concepts I’m talking about apply to oauth-based api’s, although the exact terminology may differ slightly.  
 
-Right next to the Consumer Key, you’ll see a link that says “Manage Keys”.  This is where we’re going to create the actual keys that will let us post shit to twitter.  If you click in there, you’ll see a button at the bottom to generate access tokens and secrets.  Copy those down and keep them safe.
+Once you create your app, you’ll see your Consumer Key.  Right next to the Consumer Key, you’ll see a link that says “Manage Keys”.  This is where we’re going to create the actual keys that will let us post shit to twitter.  If you click in there, you’ll see a button at the bottom to generate access tokens and secrets.  Copy those down and keep them safe.
 
 You’ll end up with four keys at the end.  Here’s what they are and what they’re for:
 
-Consumer Key: This tells twitter what application you’re talking to.  My application does one thing - posts commit messages from github.  Therefore, my user and my application are pretty-much the same.  If you consider a large application or a research project that’s posting, collecting, or doing something with tweets, it becomes more clear why twitter needs to know the exact application you’re trying to talk to.
+Consumer Key: This tells twitter who you are at at the application level.  My application does one thing - posts commit messages from github as my user.  Therefore, my user and my application are pretty-much the same.  If you consider a large application or a research project with multiple users who are collecting, posting, or analyzing tweets, it makes sense that there should be a layer of abstraction between the user and the application.
 
 Consumer Secret: This is the private half of the consumer keys.  It’s not transmitted like the consumer key is.  You know this, and twitter knows this.  It’s analogous to your password.  It’ll be used later to compute authentication information.
 
-Access Token: Since my “app” is acting on my behalf and posting tweets as me, I need an access token.  You use your consumer keys to tell twitter “I have access to use the washyobutt application”, so now you need to use the access token to tell it “It’s me, Matt, and I’m allowed to post to my washyobutt account”.  The consumer key is application-based, and the access token is user-based.
+Access Token: Since my “applicatoin” is acting on my behalf and posting tweets as me, I need an access token.  You use your consumer keys to tell twitter "I'm the washyobutt application", so now you need to use the access token to tell it that I'm a user who is allowed to post.  The consumer key is application-based, and the access token is user-based within the context of the application.
 
 Access Token Secret: This is the secret part of your access token.  It’s pretty-much the same deal as the consumer secret; it’s the private half of the exchange.
 
@@ -112,16 +113,16 @@ Now I have a local git repository, but nowhere to push it, so I need a repositor
 #### Creating the Repository on Github.
 Log into github and push the big, green “New Repository” button.
 
-With that complete, I need access to it.  I have existing projects and keys, but I’ll create a new ssh key for this project.
+With that complete, I need access to it.  I have some existing projects and keys on my github account, but I’ll create a new ssh key for this project.
 ```
 ssh-keygen -f ~/.ssh/wyb -t rsa -b 4096 -C “mattdherrick@gmail.com”
 ```
-That creates a public and a private key in my home .ssh directory, encrypted with rsa with a size of 4096 and my email address as an identifier.
+That creates a public and a private key in my home .ssh directory, encrypted with rsa with a size of 4096 bits, and my email address as a comment.
 
-Now that I have a public (.pub!) key, I’ll add it to my github account under Profile > SSH and GPG keys.
+Now that I have a key, pair I’ll add the .pub (!) half to my github account under Profile > SSH and GPG keys.
 
 #### A Quick Sidetask in Bash
-Before I do that, I’m going to install xclip.  Xclip will let you copy terminal output directly to ubuntu’s clipboard.  Since 99% of what I do is copying and pasting, I’m going to use it a lot.
+Before I do that, I’m going to install xclip.  Xclip will let you copy terminal output directly to ubuntu’s clipboard.  Since 99% of what I do is copying and pasting from people who know what they're doing, I’m going to use it a lot.
 ```
 sudo apt-get install xclip
 ```
@@ -142,11 +143,11 @@ Now I’ll get my public key, and paste it into my github profile under “SSH K
 cat ~/.wyb.pub | pbcopy
 ```
 
-Create a new key, give it a name, and paste it in.  Now I should be able to push from my local github repo to my remote repo.
+Create a new key in the github profile, give it a name, and paste in the public key from the clipboard.  Now I should be able to push from my local github repo to my remote repo.
 
 Most people use github by memorizing a few commands, and then using them until something goes horribly wrong.  It’s a lot to unpack and understand, but I’m going to touch on the high level concepts a bit as it pertains to what I’m doing.
 
-I have a local github repository that I made with git init, and a remote github repository I created through github.com.  I need to hook them together by adding the github repo as the remote.  The other (easier) way to do this is create the repo on github and then clone it, but I think this way is conceptually more clear.  
+I have a local github repository that I made with git init, and a remote github repository I created through github.com.  I need to hook them together by adding the github repo as the remote.  The other (easier) way to do this is create the repo on github and then clone it, but I think this way is conceptually more clear.
 
 A remote is exactly what it sounds like; a remote github repository that you want to push to.  Here’s the command:
 
@@ -154,7 +155,7 @@ A remote is exactly what it sounds like; a remote github repository that you wan
 git remote add origin https://github.com/ozmodiar192/washyobutt.git
 ```
 
-“Git remote add” makes sense, but what the fuck is origin?  You’ll see origin a lot in the git world; it’s the default label for the remote repository on your local system.  I could name it anything.  And if I set up my project on a different computer, I could name it the same or completely differently.  It doesn’t matter.  I use it because it’s usually named that way in examples and on stackoverflow, and most of what I do is copying and pasting out of stack overflow.
+“Git remote add” makes sense, but what the fuck is origin?  You’ll see origin a lot in the git world; it’s the default label on your local system for the remote repository.  I could name it anything.  It doesn’t matter.  It's a good convention, and it's usually named that way in examples and on stackoverflow.  As I said, most of what I do is copying and pasting out of stack overflow.
 
 So now I should have my git repos hooked up, so I’ll add a README.md file.  That’ll display on the github page.  Eventually it’ll be this document, but for now I’ll put some dummy text in there.  I’ll edit the file and then do
 ```
@@ -409,3 +410,51 @@ If your needs grow, you might find yourself in need of a more sophisticated netw
 I put all my VPC-specific settings in vpc.tf.  I also move everything to a per-vpc sub-directory from terraform.  That way, if I ever create a VPC, I can keep it's terraform configuration totally separate.  If you look through my terraform shit, you'll see the resources now reference a vpc by the variable "${aws_vpc.wyb_public.id}".  Terraform lets you work with friendly labels when you create things, but when it comes time to hook everything together you will find yourself using a lot of IDs, which you grab using that syntax.  ${resource_type.the_name_you_gave_it.the_attribute_you_want_which_is_usually_id_but_sometimes_not}.  Again, this looks impressive when you're digging around in terraform, but in practice it's pretty simple.
 
 The hardest part is understanding the VPC conceptually.  It's basically a network segment, with it's own devices, routes, and everything a network needs to function.  Right now, mine is very simple.  A VPC, a single instance, a gateway to allow internet access, a subnet, and a default route.  Everything is cross-referenced in a variety of ways, which are spelled out pretty plainly in the terraform documentation.  There were two changes that weren't very intuitive and caused me some hassle; when I started using my own VPC, I had to convert my reference to the security_group (allow_ssh) to use the id instead of the name, and I had to start specifying how I want to address my instance because it stopped giving me a public IP by default.  Right now, I just assigned it a public IP address.  Eventually I may use NAT, or elastic IPs, or something else.
+
+## Content
+It's about time to actually put up content and an actual website.  The first iteration of WYB will be pretty simple; a single webserver and a single page.  I haven't written html or css, so I spent some time figuring it out.  Like most things in IT, it's pretty simple once you get the basics down.  I wanted an old-school looking flashing, blinking, HTML monstrosity, but things like blink and marquee are either gone from the HTML spec or considered unsupported.  Browser support is dubious for them.  I found someone with a blinking .css, but it doesn't have that shitty, geocities feel I was going for.  I settled on the blinking css because the last thing I want to do is get hung up on webdesign.
+
+## Deploying
+I have a functional website, but there's no way in hell I went through all this automation to have to copy the damn thing up and install a web server every time I run my terraform scripts.  There's a few options for automation here: I could write ansible scripts or something and run it locally, using an inventory generated from terraform.  I could probalby use Amazon CodeDeploy and an image file (ami) with a webserver on it already.  Using an ami with a pre-built webserver doesn't seem devops-y enough, you know?
+
+I could use cloud-init to do it.  Cloud-init and userdata are parts of the cloud-init system.  They both run the first time you start up an instance.  User data scripts are bash shell scripts, whereas cloud-init is a more declarative, directive-based set of tasks.  There's room for personal preference; if you like bash and want to do the whole thing as a shell script, use a user data script.  If you aren't, you can do a lot with cloud-init before you have to dive into linux commands.  Hell, if you wanted to, you could write it all in python or ruby or whatever, store it in an s3 bucket, and then download and run it with a single, one-line user data script.
+
+The last option, and the one I decided to use, is the built-in terraform provisioners.  I don't like the syntax, but my initial provisioning is so incredibly simple that it's an easy thing to throw in terraform.
+
+The first thing I'm going to do is spin up my instance and manually configure it so I can get all the commands I need organized and figure out the best way to execute them.
+
+### Manual Setup
+I ran terraform apply to spin up my environment at Amazon, and then used ssh ubuntu@my.public.ip to connect.  I got the public ip from running terraform show, however I noticed that since switching to a non-default VPC, I no longer have a public DNS name by default.  I'll have to fix that later.
+
+I did an apt update and install the nginx package, and it started up just fine.  I looked at the conf file in /etc/nginx/sites-enabled/default to see where I should put the content.  As expected, it's /var/www/html.  For now, I'm happy using the default nginx configs so I'm not going to mess with anything.
+
+### Managing Git Keys
+In order to clone my github repo and deploy my sweet-ass web content, I need to use SSH to checkout my code from Github.  My security policy defined in terraform already allows outbound connectivity, and my route through my Internet Gateway gets me there, but I need to set up authentication.
+
+Git says there's 4 ways to manage deployment access.  SSH Agent Forwarding, HTTPS with OAuth, Deploy Keys, and Machine Users.  SSH Agent forwarding (forwarding the remote instance SSH connection through my laptop) is not an option for me because I don't want to ssh into my instance(s) to deploy.  OAuth might be okay, but if I'm managing sensitive oauth tokens, I may as well manage sensitive ssh keys.  A deploy key is pretty-much the same as a user key only it's granted on a per-repository basis instead of per-user.  Finally, there's the machine user, which is pretty-much the same as a user.  The difference is symantic  only; a machine account is just a user account that's used by a machine and not a person.  
+
+Based on my needs, I think I'll use a deploy key.  I don't want or need this user to access any of my other repositories, so a machine account is a bit more access than needed.  Since I'll have to manually add the key to github, it's only a matter of where I put the key.
+
+Note that you can't add users to github programtically.  Every github user is manually created one.  This is in their terms of service, so the most you can get away with is a machine user that you create manually.  Therefore, I can't put any automation around this.  Since it's going to be a private key, I don't want to check it into github anyway.
+
+For the time being, I'm going to push the key up to my EC2 instance from my local machine's /private directory using the terraform File provisioner.  This will meet my goals - my private key won't be checked into github.  It'll be transmitted over ssh, so it'll be encrypted in transit.  It's not as fancy as I'd like, but in the long term I'm going to be using docker for most of this anyway.  I'll probably re-engineer it at that time.
+
+I created a new ssh key using
+```
+ssh-keygen -f ~/Projects/wyb/private/wyb_deployer -t rsa -b 4096 -C "wyb_deployer"
+```
+
+and then went into my github repository settings and pasted in the contents of the wyb_deployer.pub file using my old friend xclip aka pbcopy.  I marked it read only because I don't want it to write to my repository ever.  This is another manual step, which is unfortunate, but unavoidable.
+
+## Delving Into Terraform Provisioning
+To use the terraform file provisioner, you need both a definition for the provisioner and the connection it should use.  These are both in ec2.tf.  The connection definition needs your private key so it can authenticate with your instance.  For the time being, I'm going to use my wyb private key that I use to connect.  I could create a new key, and add a second aws_key_pair resource with its public key to my security.tf, but I decided not to since I don't see this current configuration as a desired end state.  
+
+I wanted to make the private key a variable in my terraform.tfvars file so future wyb developers could use their private keys by editing one file. However, the private key is long and I want to read it in from the file.  Pasting in a giant private key is a bad idea for a bunch of reasons.
+
+My desired state was to read in the private key from the file in my terraform.tfvars file, but that doesn't work.  It would've looked like this:
+```
+ec2SecretKey="${file("/home/matt/wyb")}"
+```
+and then a reference to ec2SecretKey in my vars.tf.  However, tfvars doesn't support interpolation at this time, so that's impossible.  I had to make yet another compromise and put the reference to the private key directly in the connection definition of the provisioner. 
+
+The good news is that it works.  I can put the file out there and it appears on my ec2 instance.  The bad news is that the perms are too permissive and I need to chmod them to 600.  Enter the terraform remote-exec provision.  This is pretty-much the same deal as the file-provisioner, only I need to feed it my shell commands as a list in an inline block.
