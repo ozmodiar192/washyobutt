@@ -1,4 +1,5 @@
 # washyobutt
+Yes, it's' supposed to be like that.
 
 ## Introduction
 Lately my job has been writing ansible to install and configure Weblogic, JBoss, Endeca, and apache environments for customers who run ecommerce sites based on Oracle Commerce, or ATG.  It’s a fine job; I’ve gotten comfortable with ansible and I’ve learned some things along the way.
@@ -7,7 +8,7 @@ Recently my whole team congregated at our corporate office.  Most of us are remo
 
 My company seems to hire young and enthusiastic people.  It’s something I love about it.  During our annual powow, I noticed was almost everyone had a big idea for how the team should function; some new method of dealing with work, some way to push our offering into the future.  Some of them will blossom beautifully into existence, and some are what you can only call Devops fanfiction.  I’ve had enough of these ideas to know that most of them won’t happen.
 
-So this is my newest technology project that won’t happen - a website that does nothing, yet manages to use as many technologies as I can cram in.  I bought the washyobutt.com domain on a lark about 6 months ago after watching the Public Enemy “I Can’t do Nuttin’ for Ya, Man” video on youtube.  I highly recommend it.  I never really had any good use for the domain.  I still don’t, but that’s not going to stop me from building the most over-engineered, devopsy site I can.
+So this is my newest technology project that won’t happen - a website that does nothing, yet manages to use as many technologies as I can cram in.  I bought the washyobutt.com domain on a lark about 6 months ago after watching the Public Enemy “I Can’t do Nuttin’ for Ya, Man” video on youtube.  I highly recommend it.  I never really had any good use for the domain.  I still don’t, but that’s not going to stop me from building the most over-engineered, needlessly devops-y site I can.
 
 ## Tweeting My Commits
 
@@ -40,7 +41,7 @@ Once you create your app, you’ll see your Consumer Key.  Right next to the Con
 
 You’ll end up with four keys at the end.  Here’s what they are and what they’re for:
 
-Consumer Key: This tells twitter who you are at at the application level.  My application does one thing - posts commit messages from github as my user.  Therefore, my user and my application are pretty-much the same.  If you consider a large application or a research project with multiple users who are collecting, posting, or analyzing tweets, it makes sense that there should be a layer of abstraction between the user and the application.
+Consumer Key: This tells twitter who you are, at at the application level.  My application does one thing - posts commit messages from github as my user.  Therefore, my user and my application are pretty-much the same.  If you consider a large application or a research project with multiple users who are collecting, posting, or analyzing tweets, it makes sense that there should be a layer of abstraction between the user and the application.
 
 Consumer Secret: This is the private half of the consumer keys.  It’s not transmitted like the consumer key is.  You know this, and twitter knows this.  It’s analogous to your password.  It’ll be used later to compute authentication information.
 
@@ -76,9 +77,9 @@ This is from the twitter API documentation; it’s wrapped here for readability.
  
 The consumer key we talked about above - that’s what tells Twitter which application I am.
 
-The nonce is a unique 32-character string that twitter uses to detect duplicate requests.  This needs to be random.
+The nonce is a unique 32-character string that twitter uses to detect duplicate requests.  This needs to be unique.
 
-The signature is where things start to get interesting.  This is used to verify your access, your user, and also let’s twitter tell if your request has been altered in transmission.  It’s a computed value based on a hash of the request created with your secret information.  If you were to construct this, you’d take all the other parameters from both the http headers and the url, jam them all together and percent encode them.  Then you’d do the same with your sensitive information - your consumer secret and your oauth token secret.  Now you feed your jammed together encoded request and your jammed together sensitive information through a hashing algorithm to get a binary string, which you then convert base64.  Twitter will create the same sensitve string and use the same hashing algorithm verify your request.
+The signature is the interesting part.  This is used to verify your access, your user, and also let’s twitter tell if your request has been altered in transmission.  It’s a computed value based on a hash of the request created with your secret information.  If you were to construct this, you’d take all the other parameters from both the http headers and the url, jam them all together and percent encode them.  Then you’d do the same with your sensitive information - your consumer secret and your oauth token secret.  Now you feed your jammed together encoded request and your jammed together sensitive information through a hashing algorithm to get a binary string, which you then convert base64.  Twitter will create the same sensitve string and use the same hashing algorithm verify your request.
 
 The oauth signature method tells twitter what hashing algorithm you used to generate the signature.
 
@@ -119,7 +120,7 @@ ssh-keygen -f ~/.ssh/wyb -t rsa -b 4096 -C “mattdherrick@gmail.com”
 ```
 That creates a public and a private key in my home .ssh directory, encrypted with rsa with a size of 4096 bits, and my email address as a comment.
 
-Now that I have a key, pair I’ll add the .pub (!) half to my github account under Profile > SSH and GPG keys.
+Now that I have a key, pair I’ll add the .pub (PUB!) half to my github account under Profile > SSH and GPG keys.
 
 #### A Quick Sidetask in Bash
 Before I do that, I’m going to install xclip.  Xclip will let you copy terminal output directly to ubuntu’s clipboard.  Since 99% of what I do is copying and pasting from people who know what they're doing, I’m going to use it a lot.
@@ -145,9 +146,9 @@ cat ~/.wyb.pub | pbcopy
 
 Create a new key in the github profile, give it a name, and paste in the public key from the clipboard.  Now I should be able to push from my local github repo to my remote repo.
 
-Most people use github by memorizing a few commands, and then using them until something goes horribly wrong.  It’s a lot to unpack and understand, but I’m going to touch on the high level concepts a bit as it pertains to what I’m doing.
+Most people use github by memorizing a few commands, and then using them until something goes horribly wrong and frantically googling it.  I am no different.  It’s a lot to unpack and understand, but I’m going to touch on the high level concepts a bit as it pertains to what I’m doing.
 
-I have a local github repository that I made with git init, and a remote github repository I created through github.com.  I need to hook them together by adding the github repo as the remote.  The other (easier) way to do this is create the repo on github and then clone it, but I think this way is conceptually more clear.
+I have a local github repository that I made with git init, and a remote github repository I created through github.com.  I need to hook them together by adding the github repo as the remote.  The other (easier) way to do this is create the repo on github and then clone it, but I think this way illustrates how it works a little better.
 
 A remote is exactly what it sounds like; a remote github repository that you want to push to.  Here’s the command:
 
@@ -155,13 +156,13 @@ A remote is exactly what it sounds like; a remote github repository that you wan
 git remote add origin https://github.com/ozmodiar192/washyobutt.git
 ```
 
-“Git remote add” makes sense, but what the fuck is origin?  You’ll see origin a lot in the git world; it’s the default label on your local system for the remote repository.  I could name it anything.  It's a good convention, and it's usually named that way in examples and on stackoverflow.  As I said, most of what I do is copying and pasting out of stack overflow.  When you clone a repository with git, it creates a remote for you automatically called "origin", so people generally use it for everything so you don't have to constantly check the name of your remote if you're working on multiple projects.
+“Git remote add” makes sense, but what's the deal with "origin"?  You’ll see origin a lot in the git world; it’s the default label on your local system for the remote repository.  I could name it anything.  It's a good convention, and it's usually named that way in examples and on stackoverflow.  As I said, most of what I do is copying and pasting out of stack overflow.  When you clone a repository with git, as I recommended above, it creates a remote for you automatically called "origin".
 
 So now I should have my git repos hooked up, so I’ll add a README.md file.  That’ll display on the github page.  Eventually it’ll be this document, but for now I’ll put some dummy text in there.  I’ll edit the file and then do
 ```
 git add *
 ```
-If I changed a bunch of files and only wanted a subset, I would use a different pattern in my add command, but this is what I use most of the time since I tend to do iterative testing.  Now I’ve got the file added to my project, I’ll commit it.
+If I changed a bunch of files and only wanted a subset or them, I would use a different pattern in my add command.  Now I’ve got the file added to my project, I’ll commit it.
 ```
 git commit -m “Initial edits to readme.md”
 ```
@@ -411,7 +412,7 @@ I put all my VPC-specific settings in vpc.tf.  I also moved everything to a per-
 The hardest part is understanding the VPC conceptually.  It's basically a network segment, with it's own devices, routes, and everything a network needs to function.  Right now, mine is very simple.  A VPC, a single instance, a gateway to allow internet access, a subnet, and a default route.  Everything is cross-referenced in a variety of ways, which are spelled out pretty plainly in the terraform documentation and makes sense if you're familiar with networking concepts.  There were two changes that weren't very intuitive and caused me some hassle; when I started using my own VPC, I had to convert my reference to the security_group (allow_ssh) to use the id instead of the name, and I had to start specifying how I want to address my instance, because it stopped giving me a public IP by default.  Right now, I just assigned it a public IP address.  Eventually I may use NAT, or elastic IPs, or something else.
 
 ## Content
-It's about time to actually put up content and an actual website.  The first iteration of WYB will be pretty simple; a single webserver and a single page.  I haven't written html or css, so I spent some time figuring it out.  Like most things in IT, it's pretty simple once you get the basics down.  I wanted an old-school looking flashing, blinking, HTML monstrosity, but things like blink and marquee are either gone from the HTML spec or considered unsupported.  Browser support is dubious for them for taste and accessibility reasons.  I found someone with a blinking .css, but it doesn't have that shitty, geocities feel I was going for.  I settled on it because the last thing I want to do is get hung up on web design on this website project.
+It's about time to actually put up content and an actual website.  The first iteration of WYB will be pretty simple; a single webserver and a single page.  I haven't written html or css, so I spent some time figuring it out.  Like most things in IT, it's pretty easy to do it poorly, once you understand the basic idea.  I wanted an old-school looking flashing, blinking, HTML monstrosity, but things like blink and marquee are either gone from the HTML spec or considered unsupported.  Browser support is dubious for them for taste and accessibility reasons.  I found someone with a blinking .css, but it doesn't have that shitty, geocities feel I was going for.  I settled on it because the last thing I want to do is get hung up on web design on this website project.
 
 ## Deploying
 I have a functional website, but there's no way in hell I went through all this automation to have to copy it up and install a web server every time I run my terraform scripts.  There's a few options for automation here: I could write ansible scripts or something and run it locally, using an inventory generated from terraform.  I could probalby use Amazon CodeDeploy and an image file (ami) with a webserver on it already.  Using an ami with a pre-built webserver doesn't seem devops-y enough, you know?  What if I need to use a different ami some day for some reason?  What if I want a specific version of nginx?
@@ -489,3 +490,11 @@ This created a reusuable delegation set for me.  Caller-reference is a unique st
 ```
 
 Now, when I create my DNS zone for wyb, I'll just reference the ID of my permanent delegation set, which is N3DWCHIKKR8MP4.  I can point namecheap to the four name servers listed above, and I'll be able to freely create and destroy my dns zones while always getting the same four name servers.
+
+### Welp, the site is up, I guess.
+I now have what people in software consider a "minimally viable product".  Minimally viable product is really just a nice way of saying "we're figuring this out as we go along", but my intentionally terrible and useless website now spins up from next-to-nothing with a single command.  Revisiting my notes, I have a few things I'd like to do before I continue on with my project and make it slightly more viable, but no less terrible and useless.
+
+1) Get my keys in order and aduit my security settings.  Investigate service roles/assume roles so users can escalate their permissoins for automation purposes.
+2) Script out the creation of my dynamodb table, s3 bucket, and reusable delegation set.  This script should output the vars directly for terraform to consume.
+3) Create a project initialization script that sets up the environment for you as much as possible.
+4) revisit my git hook.  I'd like to link to specific commits since I'm treating readme.md as a dev log.
