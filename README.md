@@ -44,7 +44,7 @@ Consumer Key: This tells twitter who you are at at the application level.  My ap
 
 Consumer Secret: This is the private half of the consumer keys.  It’s not transmitted like the consumer key is.  You know this, and twitter knows this.  It’s analogous to your password.  It’ll be used later to compute authentication information.
 
-Access Token: Since my “applicatoin” is acting on my behalf and posting tweets as me, I need an access token.  You use your consumer keys to tell twitter "I'm the washyobutt application", so now you need to use the access token to tell it that I'm a user who is allowed to post.  The consumer key is application-based, and the access token is user-based within the context of the application.
+Access Token: Since my “application” is acting on my behalf and posting tweets as me, I need an access token.  You use your consumer keys to tell twitter "I'm the washyobutt application", so now you need to use the access token to tell it that I'm a user who is allowed to post.  The consumer key is application-based, and the access token is user-based within the context of the application.
 
 Access Token Secret: This is the secret part of your access token.  It’s pretty-much the same deal as the consumer secret; it’s the private half of the exchange.
 
@@ -155,7 +155,7 @@ A remote is exactly what it sounds like; a remote github repository that you wan
 git remote add origin https://github.com/ozmodiar192/washyobutt.git
 ```
 
-“Git remote add” makes sense, but what the fuck is origin?  You’ll see origin a lot in the git world; it’s the default label on your local system for the remote repository.  I could name it anything.  It doesn’t matter.  It's a good convention, and it's usually named that way in examples and on stackoverflow.  As I said, most of what I do is copying and pasting out of stack overflow.
+“Git remote add” makes sense, but what the fuck is origin?  You’ll see origin a lot in the git world; it’s the default label on your local system for the remote repository.  I could name it anything.  It's a good convention, and it's usually named that way in examples and on stackoverflow.  As I said, most of what I do is copying and pasting out of stack overflow.  When you clone a repository with git, it creates a remote for you automatically called "origin", so people generally use it for everything so you don't have to constantly check the name of your remote if you're working on multiple projects.
 
 So now I should have my git repos hooked up, so I’ll add a README.md file.  That’ll display on the github page.  Eventually it’ll be this document, but for now I’ll put some dummy text in there.  I’ll edit the file and then do
 ```

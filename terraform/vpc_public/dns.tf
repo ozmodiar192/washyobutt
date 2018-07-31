@@ -4,7 +4,7 @@ resource "aws_route53_zone" "wybPublic" {
   delegation_set_id = "${var.delegationSet}"
 }
 
-# Create A records for my website
+# Create A record for my website
 resource "aws_route53_record" "washyobutt" {
   zone_id = "${aws_route53_zone.wybPublic.zone_id}"
   name    = "washyobutt.com"

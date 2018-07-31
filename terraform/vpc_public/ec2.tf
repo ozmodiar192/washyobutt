@@ -1,3 +1,4 @@
+# Create an EC2 instance to host the website
 resource "aws_instance" "wybSingleton" {
   ami                         = "ami-2757f631"
   instance_type               = "t2.nano"
@@ -8,6 +9,7 @@ resource "aws_instance" "wybSingleton" {
   tags {
     Name                      = "washyobutt"
   }
+# provisioning commands
   provisioner "remote-exec" {
     inline = [
       "sudo apt-get update",
@@ -16,6 +18,7 @@ resource "aws_instance" "wybSingleton" {
       "sudo ln -s ~/washyobutt/content/* /var/www/html/",
       "sudo service nginx start",
     ]
+# Define connection for provisioner
     connection {
       type        = "ssh"
       user        = "ubuntu"

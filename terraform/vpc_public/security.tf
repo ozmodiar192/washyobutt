@@ -15,6 +15,8 @@ resource "aws_security_group" "allow_ssh" {
     Name = "allow_ssh"
   }
 }
+
+# Allow website traffic
 resource "aws_security_group" "allow_web" {
   name        = "allow_web"
   description = "Allow website inbound traffic from all IPs"
@@ -37,6 +39,8 @@ resource "aws_security_group" "allow_web" {
     Name = "allow_web"
   }
 }
+
+# Allow all outbound traffic
 resource "aws_security_group" "allow_all_outbound" {
   name        = "allow_all_outbound"
   description = "Allow all outbound traffic"
