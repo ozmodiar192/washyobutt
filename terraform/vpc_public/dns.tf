@@ -1,7 +1,7 @@
 #Create wyb DNS zone, referencing previously created delegation set.
 resource "aws_route53_zone" "wybPublic" {
   name = "washyobutt.com"
-  delegation_set_id = "N3DWCHIKKR8MP4"
+  delegation_set_id = "${var.delegationSet}"
 }
 
 # Create A records for my website

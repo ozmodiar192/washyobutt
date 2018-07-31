@@ -20,6 +20,12 @@ variable "region" {
     description = "The region of AWS, for AMI lookups."
 }
 
+#Pre-configured DNS delegation set ID
+variable "delegationSet" {
+    default     = "N3DWCHIKKR8MP4"
+    description = "Static delegation created outside of TF"
+}
+
 
 #Call out to icanhazip.com to get my local workstation's external ip, which I can reference as (data.http.icanhazip.body) 
 data "http" "icanhazip" {
