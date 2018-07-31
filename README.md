@@ -442,3 +442,51 @@ and then a reference to ec2SecretKey in my vars.tf and reference it neatly withi
 The good news is that it works.  I threw the rest of my commands into the provisioner, and now washyobutt.com automatically appears after my terraform run!
 
 The next thing I need is DNS.
+
+### Route53
+
+I'll use Route53 to host my DNS.  Terraform can manage other DNS providers, but Route53 is easy to use with the other Amazon stuff I've already configured.  The traditional DNS concepts still exist, although there are some additional features and minor differences with Route53.
+
+One of those new concepts is delegation sets.  Since Route53 is highly distributed, you aren't guaranteed to have the same name servers for each of your dns zones.  When you create the zone, Amazon assigns you four name servers, and you have no guarantee what they'll be.  The four records are called a "delegation set".  An uncertain delegation set would be a pain in the ass if you have a bunch of domains registered somewhere outside of AWS.  You'd have to compile the name servers for a bunch of domains with a mishmash of authoritative DNS servers and point your external provider at them, and update them if you tear down and recreate your DNS zones. Therefore, Route53 allows you to make "Reusable Delegation Sets", which is just a static list of 4 name servers that you'll use for all your DNS.
+
+I registered washyobutt.com at namecheap for some reason (it must've been cheap), and terraform does not currently support the namecheap api, so I'll need to do some dns setup out-of-band.  There's built in DNS for NameCheap, but I don't want to use it for my DNS records; I want to point it at Route53 so I can dynamically update with the rest of my terraform/aws stuff.  I logged in and looked at what's at Namecheap, and right now it's a CNAME (alias) that points to some parking page that probably has a bunch of ads on it if you're not using adblock.  Gross, sorry.
+
+The issue I have is that I treasure the ability to tear down the environment, but I also don't want to continuously edit my namecheap records to reflect updated DNS servers at Route53.  I'm trying to minimize the number of persistent resources I keep up and running, at least until I have the website at some kind of desired end-state.  Tearing down a reusable delegation set defined in terraform kind of defies the point of having one, so that won't help me much.  I could do a bunch of beaurocratic stuff to transfer my domain to Route53, and let that update my authoritative DNS servers automatically.  After some deliberation, I thought I'd create a reusable delegration set outside of Terraform, point namecheap at it, and then just reference it in my Terraform config.
+
+Unfortunately you can't create a reusable delegation set in the AWS console; it must be done through the API.  Terraform is happy to do this, but I don't want it in my state and I don't want to manage it.  This is the second time I've created AWS infrastructure outside of Terraform; the first was when I set up terraform's state management stuff.  This is a trade off I'm making between needing persistent resources, and wanting my stuff to be ephemeral.
+
+To create my reusuable delegation set, I did
+```
+pip install awscli
+```
+and then ran
+```
+aws configure
+```
+and fed it the terraform access key and secret.  AWS and Terraform both check for credentials in a few places, so I made sure to unset any environment variables I set while messing around
+```
+for var in AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN AWS_SECURITY_TOKEN ; do eval unset $var ; done
+```
+
+Then I ran:
+```
+aws route53 create-reusable-delegation-set --caller-reference `date +%s`
+```
+This created a reusuable delegation set for me.  Caller-reference is a unique string, so I just used seconds from the linux epoc. That barfed out this output:
+```
+{
+    "Location": "https://route53.amazonaws.com/2013-04-01/delegationset/N3DWCHIKKR8MP4", 
+    "DelegationSet": {
+        "NameServers": [
+            "ns-581.awsdns-08.net", 
+            "ns-1815.awsdns-34.co.uk", 
+            "ns-488.awsdns-61.com", 
+            "ns-1299.awsdns-34.org"
+        ], 
+        "CallerReference": "1533057420", 
+        "Id": "/delegationset/N3DWCHIKKR8MP4"
+    }
+}
+```
+
+Now, when I create my DNS zone for wyb, I'll just reference the ID of my permanent delegation set, which is N3DWCHIKKR8MP4.  I can point namecheap to the four name servers listed above, and I'll be able to freely create and destroy my dns zones while always getting the same four name servers.

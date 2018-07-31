@@ -2,7 +2,7 @@
 resource "aws_security_group" "allow_ssh" {
   name        = "allow_ssh"
   description = "Allow inbound SSH traffic from my ip"
-  vpc_id      = "${aws_vpc.wyb_public.id}"
+  vpc_id      = "${aws_vpc.wybPublic.id}"
 
   ingress {
     from_port   = 22
@@ -18,7 +18,7 @@ resource "aws_security_group" "allow_ssh" {
 resource "aws_security_group" "allow_web" {
   name        = "allow_web"
   description = "Allow website inbound traffic from all IPs"
-  vpc_id      = "${aws_vpc.wyb_public.id}"
+  vpc_id      = "${aws_vpc.wybPublic.id}"
 
   ingress {
     from_port   = 80
@@ -40,7 +40,7 @@ resource "aws_security_group" "allow_web" {
 resource "aws_security_group" "allow_all_outbound" {
   name        = "allow_all_outbound"
   description = "Allow all outbound traffic"
-  vpc_id      = "${aws_vpc.wyb_public.id}"
+  vpc_id      = "${aws_vpc.wybPublic.id}"
 
   egress {
     from_port   = 0
@@ -55,7 +55,7 @@ resource "aws_security_group" "allow_all_outbound" {
 }
 
 # Create my keypair for access to the box
-resource "aws_key_pair" "wyb_public" {
+resource "aws_key_pair" "wybPublic" {
   key_name   = "wyb.pub"
   public_key = "${var.publicKey}"
 }
