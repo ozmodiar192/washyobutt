@@ -1,5 +1,6 @@
 # Create an EC2 instance to host the website
 resource "aws_instance" "wybSingleton" {
+  provider                    = "aws.awsAssume"
   ami                         = "ami-2757f631"
   instance_type               = "t2.nano"
   key_name                    = "wyb.pub"
@@ -7,7 +8,7 @@ resource "aws_instance" "wybSingleton" {
   subnet_id                   = "${aws_subnet.wybPublic_main.id}"
   associate_public_ip_address = true
   tags {
-    Name                      = "washyobutt"
+    Name                      = "washyobuttSingleton"
   }
 # provisioning commands
   provisioner "remote-exec" {

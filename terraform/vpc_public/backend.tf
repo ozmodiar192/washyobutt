@@ -6,5 +6,6 @@ terraform {
  dynamodb_table = "wyb-tf-state-table"
  region         = "us-east-1"
  key            = "tf_prod/wyb.tfstate"
+ role_arn       = "arn:aws:iam::054218007579:role/AutomationFullAccess"
  }
 }
