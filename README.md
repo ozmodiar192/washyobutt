@@ -494,7 +494,98 @@ Now, when I create my DNS zone for wyb, I'll just reference the ID of my permane
 ### Welp, the site is up, I guess.
 I now have what people in software consider a "minimally viable product".  Minimally viable product is really just a nice way of saying "we're figuring this out as we go along", but my intentionally terrible and useless website now spins up from next-to-nothing with a single command.  Revisiting my notes, I have a few things I'd like to do before I continue on with my project and make it slightly more viable, but no less terrible and useless.
 
-1) Get my keys in order and audit my security settings.  Investigate service roles/assume roles so users can escalate their permissoins for automation purposes.
+1) Get my keys in order and audit my security settings.  Investigate service roles/assume roles so users can escalate their permissions for automation purposes.
 2) Script out the creation of my dynamodb table, s3 bucket, and reusable delegation set.  This script should output the vars directly for terraform to consume.
 3) Create a project initialization script that sets up the environment for you as much as possible.
 4) revisit my git hook.  I'd like to link to specific commits since I'm treating readme.md as a dev log.
+
+## Revisiting IAM
+I wanted to implement assume roles vs. having dedicated users for provisioning.  Assume roles are a way to temporarily elevate access; rather than giving individual users permissions to do what they need, you give them access to your role.  This gives you a centralized place to delegate pre-configured acccess levels.  I absolutely don't need to do this since I'm one person, but I read an article about some company with a crazy amount of microservices, and this is how they do it.
+
+First I logged into the console and created a role.  I gave it the same permissions as my terraform user; full access to S3, EC2, DynamoDB, and Route53.  As you probably don't recall, when I created my terraform user, I put it in a group called api-user-full-access and assigned the permissions to the group.  Now I want to remove those permissions, and give the group access to my role by adding the following policy as an inline policy under Permissions.
+
+```
+{
+    "Version": "2012-10-17",
+    "Statement": {
+        "Effect": "Allow",
+        "Action": "sts:AssumeRole",
+        "Resource": "arn:aws:iam::054218007579:role/AutomationFullAccess"
+    }
+}
+```
+
+Now that my group has access to assume the role, I need to define permissions on the role itself.  You would think it would be the mirror of the above policy; give it my group arn as the resource and be done with it.  You'd be wrong.  This policy ties a specific identity to the role; I can't do it by group because a group is not a specific identity.  Therefore, the only option I could find was to leave it open to the whole account and rely on group-side of the permissions to govern it.  This is a little bit scary, but much easier since I won't have to edit my role policy every time I add a group.
+
+```
+  {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::054218007579:root"
+      },
+      "Action": "sts:AssumeRole"
+    }
+```
+
+But still, why not just add/remove people from the group and not do this?  Why mess with escalating permissions roles and such?  For what I'm doing now, it doesn't matter.  For a real person, assume roles means you have to purposefully escalate your permissions to a specific role before completing a task.  That's much safer than giving people carte blanche and turning them loose on the API or in the console.  It also gives real people a way to audit more cleanly.  Instead of looking through every event, they would just look at the escalations and track down the request that way.  It's potentially a lot less to dig through.  You can also force roles to use MFA if you want to.  You can't force a 3rd party contractor or your idiot friend who's helping you out to secure their ec2 credentials, but you can force them to adhere to your security policy before assuming your roles.
+
+I implimented this, revoked the group-based permissions on the api-user-full-access group, and then tried it out by running a terraform apply.  It failed;
+```
+Failed to load state: AccessDenied: Access Denied
+2018/08/01 12:14:41 [DEBUG] plugin: waiting for all plugin processes to complete...
+	status code: 403, request id: 7C70031E0A8DCFFF, host id: o8hFGEJLTthz3TOsHTRVRjS3BtkK035yT0HLPn+yXP17jpNwYeZbL15VyH40b/XJlEux32lIMKI=
+```
+
+### Debugging assume roles and terraform
+To debug this, I put terraform in debug mode with the TF_LOG environment variable:
+```
+export TF_LOG=debug
+```
+I ran it again and looked at the output.  It was getting permission denied when trying to list the contents of the s3 bucket where my state lives:
+```
+DEBUG: Response s3/ListObjects Details:
+---[ RESPONSE ]--------------------------------------
+HTTP/1.1 403 Forbidden
+```
+I decided to try using the AWS cli tools to do the same thing.  The debug log is quite a bit to look through and I couldn't seem to find where the assume role was happening, so I figured it would be cleaner if I ran the cli tools.  I previously installed the aws cli tools to create my Route53 reusable delegation set, so it was all set it.  I ran aws configure and made sure it was using my terraform secret and access keys.  I also added a section to my ~/.aws/config file that defined my assume role:
+```
+[profile prodProvision]
+role_arn =  arn:aws:iam::054218007579:role/AutomationFullAccess
+source_profile = default
+```
+Then I ran this to see if I could list my bucket contents.
+```
+aws s3api list-objects --bucket wyb-state-bucket --profile prodProvision
+```
+Oddly, this worked just fine:
+```
+{
+    "Contents": [
+        {
+            "LastModified": "2018-08-01T16:30:26.000Z", 
+            "ETag": "\"3050f75c3f87722f54f717cdd49da963\"", 
+            "StorageClass": "STANDARD", 
+            "Key": "tf_prod/wyb.tfstate", 
+            "Owner": {
+                "DisplayName": "mattdherrick", 
+                "ID": "<some big id>"
+            }, 
+            "Size": 318
+        }
+    ]
+}
+```
+Just to make sure it was assuming the role, I tried it without the --profile and it failed:
+```
+matt@ubuntu-tpad:~/Projects/wyb/terraform/vpc_public$ aws s3api list-objects --bucket wyb-state-bucket
+An error occurred (AccessDenied) when calling the ListObjects operation: Access Denied
+```
+
+I messed around with this for a while, and ultimately the issue was a mistake in the group inline policy and the fact that terraform requires you to pass the assume role arn in with the backend; it doesn't utilize the provider you defined.   If the mistake was my inline policy, Why did it work with aws cli?  I'm not sure.  But I'm guessing it has to do with the various ways credentials are managed in terraform and aws cli.  You can have environment variables and config files, and it could be that I had them set unintentionally.  Ultimately I was able to demonstrate that terraform and aws cli were failing, and that pointed me to the security policy in the role.  I'm going to leave this section in, even though it was my own negligence that caused this problem, because I think it's useful as a methodology for troubleshooting terraform.
+
+With my arn in the backend config and my policies sorted, I was able to run a terraform init to reconfigure the backend.  But when it came time to run the actual provisioning, everything failed.  I originally put the assume_role statement in my provider, right under my referenes to my keys, but you need to define aws providers for your user and each separate role that you want to assume.  You can see that in providers.tf.  
+
+Once you have multiple providers, you can't just let terraform use the default provider.  In my case, the user has no permissions to do anything.  You have to explicitly define the provider by it's alias when creating my resources.  This makes sense, because if you have very cleanly defined roles (instead of my sloppy ones that just allow everything), you'd need to use the correct provider for each type of resource you create.  Your s3 provisioning role for your s3 buckets, your ec2 provisioner for your instances, etc.
+
+
