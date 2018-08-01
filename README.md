@@ -494,7 +494,7 @@ Now, when I create my DNS zone for wyb, I'll just reference the ID of my permane
 ### Welp, the site is up, I guess.
 I now have what people in software consider a "minimally viable product".  Minimally viable product is really just a nice way of saying "we're figuring this out as we go along", but my intentionally terrible and useless website now spins up from next-to-nothing with a single command.  Revisiting my notes, I have a few things I'd like to do before I continue on with my project and make it slightly more viable, but no less terrible and useless.
 
-1) Get my keys in order and aduit my security settings.  Investigate service roles/assume roles so users can escalate their permissoins for automation purposes.
+1) Get my keys in order and audit my security settings.  Investigate service roles/assume roles so users can escalate their permissoins for automation purposes.
 2) Script out the creation of my dynamodb table, s3 bucket, and reusable delegation set.  This script should output the vars directly for terraform to consume.
 3) Create a project initialization script that sets up the environment for you as much as possible.
 4) revisit my git hook.  I'd like to link to specific commits since I'm treating readme.md as a dev log.
