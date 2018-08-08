@@ -1,6 +1,5 @@
 # Create an EC2 instance to host the website
 resource "aws_instance" "wybSingleton" {
-  provider                    = "aws.awsAssume"
   ami                         = "ami-2757f631"
   instance_type               = "t2.nano"
   key_name                    = "wyb.pub"
@@ -23,7 +22,7 @@ resource "aws_instance" "wybSingleton" {
     connection {
       type        = "ssh"
       user        = "ubuntu"
-      private_key = "${file("/home/matt/.ssh/wyb")}"
+      private_key = "${file("../../private/wyb_provisioner")}"
     }
   }
 }

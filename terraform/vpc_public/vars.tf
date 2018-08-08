@@ -10,7 +10,7 @@ variable "secretKey" {
 }
 
 # Read from tfvars
-variable "publicKey" {
+variable "provisionerPublicKey" {
     description = "AWS Public Key"
 }
 
@@ -25,7 +25,6 @@ variable "delegationSet" {
     default     = "N3DWCHIKKR8MP4"
     description = "Static delegation created outside of TF"
 }
-
 
 #Call out to icanhazip.com to get my local workstation's external ip, which I can reference as (data.http.icanhazip.body) 
 data "http" "icanhazip" {

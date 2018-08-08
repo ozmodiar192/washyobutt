@@ -1,6 +1,5 @@
 #Create a security group to allow incoming ssh from my current external IP
 resource "aws_security_group" "allow_ssh" {
-  provider    = "aws.awsAssume"
   name        = "allow_ssh"
   description = "Allow inbound SSH traffic from my ip"
   vpc_id      = "${aws_vpc.wybPublic.id}"
@@ -19,7 +18,6 @@ resource "aws_security_group" "allow_ssh" {
 
 # Allow website traffic
 resource "aws_security_group" "allow_web" {
-  provider    = "aws.awsAssume"
   name        = "allow_web"
   description = "Allow website inbound traffic from all IPs"
   vpc_id      = "${aws_vpc.wybPublic.id}"
@@ -44,7 +42,6 @@ resource "aws_security_group" "allow_web" {
 
 # Allow all outbound traffic
 resource "aws_security_group" "allow_all_outbound" {
-  provider    = "aws.awsAssume"
   name        = "allow_all_outbound"
   description = "Allow all outbound traffic"
   vpc_id      = "${aws_vpc.wybPublic.id}"
@@ -61,9 +58,8 @@ resource "aws_security_group" "allow_all_outbound" {
   }
 }
 
-# Create my keypair for access to the box
+# Create keypair for provisioning the box
 resource "aws_key_pair" "wybPublic" {
-  provider    = "aws.awsAssume"
   key_name   = "wyb.pub"
-  public_key = "${var.publicKey}"
+  public_key = "${var.provisionerPublicKey}"
 }
