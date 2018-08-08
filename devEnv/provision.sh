@@ -5,6 +5,15 @@
 hashiFingerprint="91A6E7F85D05C65630BEF18951852D87348FFC4C"
 ## The version of terraform we want to install
 desiredTerraformVersion="0.11.7"
+githubPrivateKey="/opt/wyb/private/wyb"
+githubSshConfig="Host github.com
+    Hostname github.com
+    User git
+    PreferredAuthentications publickey
+    IdentityFile ${githubPrivateKey}
+    IdentitiesOnly yes"
+
+
 
 # Functions
 # Downloads terraform files and verifys pgp keys
@@ -70,5 +79,29 @@ if [[ ! -f /opt/wyb/private/wyb_provisioner ]] && [[ ! -f /opt/wyb/private/wyb_p
   else
     touch /opt/wyb/terraform/vpc_public/terraform.tfvars
     echo "provisionerPublicKey = \"${wybProvisionerPub}\"" >> /opt/wyb/terraform/vpc_public/terraform.tfvars
+  fi
+else
+  echo "You have a provisioning key, please make sure it's defined in you terraform.tfvars as provisionerPublicKey"
+fi
+
+# Need to do some work on the keys for github.  First check if .ssh exists
+if [[ -f /home/vagrant/.ssh/config ]]; then
+  echo "SSH config exists"
+  #Now check if there's a config for github already.  We're erroring on the side of not messing with the user's setup.
+  if ! grep -i "Hostname github.com"; then
+    cat <<EOF >> /home/vagrant/.ssh/config
+    ${githubSshConfig}
+EOF
+  fi
+else
+  touch /home/vagrant/.ssh/config
+    cat <<EOF >> /home/vagrant/.ssh/config
+    ${githubSshConfig}
+EOF
+
+  #Our github ssh config is looking for /opt/wyb/private/wyb, so we'll check if that file is there.  If not, we'll create an ssh key with that name.
+  if [[ ! -f ${githubPrivateKey} ]]; then
+    ssh-keygen -f ${githubPrivateKey} -t rsa -b 4096 -C "wyb" -q -N ""
+    echo "Created a private key for you at ${githubPrivateKey}.  Your ssh config has been updated to use this key for github access on the vagrant VM.  You will need to add the public key from ${githubPrivateKey}.pub to your github account, and request access as a collaborator to the project.  Feel free to use your own and reconfigure ssh as needed."
   fi
 fi
