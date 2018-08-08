@@ -104,7 +104,7 @@ EOF
 else
   touch /home/vagrant/.ssh/config
   cat <<EOF >> /home/vagrant/.ssh/config
-  "${githubSshConfig}"
+  ${githubSshConfig}
 EOF
 
   #Our github ssh config is looking for /opt/wyb/private/wyb, so we'll check if that file is there.  If not, we'll create an ssh key with that name.
