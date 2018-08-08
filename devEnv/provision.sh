@@ -12,7 +12,7 @@ terraformBinDir="/home/vagrant/bin"
 ## The path to the private key we want to make github use
 githubPrivateKey="/opt/wyb/private/wyb"
 ## The github-specific config for the .ssh config file
-githubSshConfig="
+githubSSHConfig="
 Host github.com
     Hostname github.com
     User git
@@ -20,7 +20,8 @@ Host github.com
     IdentityFile ${githubPrivateKey}
     IdentitiesOnly yes"
 
-# Functions
+
+###################### Functions
 # Downloads terraform files and verifys pgp keys
 downloadTerraform(){
   wget https://releases.hashicorp.com/terraform/${desiredTerraformVersion}/terraform_${desiredTerraformVersion}_linux_amd64.zip
@@ -56,8 +57,63 @@ downloadTerraform(){
     exit 1
   fi
 }
+
+checkForDeployerKey(){
+  if [[ -f /opt/wyb/private/wyb_provisioner ]] && [[ -f /opt/wyb/private/wyb_provisioner.pub ]]; then
+    deployerKeyExists=true
+  else
+    deployerKeyExists=false
+  fi
+}
+
+checkForGithubKey(){
+  if [[ -f ${githubPrivateKey} ]]; then
+    githubKeyExists=true
+  else
+    githubKeyExists=false
+  fi
+}
+
+checkForTwitterCreds(){
+  if [[ -f /opt/wyb/private/twitter-api.properties ]]; then
+    twitterCredentialsExist=true
+  else
+    twitterCredentialsExist=false
+  fi
+}
+
+checkForAWSCreds(){
+  if find /opt/wyb -iname terraform.tfvars -print0 | xargs -0 grep accessKey > /dev/null 2>&1  && find /opt/wyb -iname terraform.tfvars -print0 | xargs -0 grep secretKey > /dev/null 2>&1 ; then
+    AWSCredsExist=true
+  else
+    AWSCredsExist=false
+  fi
+}
+
+createGithubKey(){
+    ssh-keygen -f ${githubPrivateKey} -t rsa -b 4096 -C "wyb" -q -N ""
+}
+
+createDeployerKey(){
+  ssh-keygen -f /opt/wyb/private/wyb_provisioner -t rsa -b 4096 -C "wyb_provisioning" -q -N ""
+  wybProvisionerPub=`cat /opt/wyb/private/wyb_provisioner.pub`
+  if [ -f /opt/wyb/terraform/vpc_public/terraform.tfvars ]; then
+    echo "appending new public key to your terraform.tfvars"
+    echo "provisionerPublicKey = \"${wybProvisionerPub}\"" >> /opt/wyb/terraform/vpc_public/terraform.tfvars
+  else
+    touch /opt/wyb/terraform/vpc_public/terraform.tfvars
+    echo "provisionerPublicKey = \"${wybProvisionerPub}\"" >> /opt/wyb/terraform/vpc_public/terraform.tfvars
+  fi
+}
+
+addGithubSSHConfig(){
+ cat <<EOF >> /home/vagrant/.ssh/config
+ ${githubSSHConfig}
+EOF
+}
+
     
-# Body
+########################## MAIN
 # Install zip
 sudo apt-get install -y zip
 
@@ -72,53 +128,37 @@ echo "export PATH=\${PATH}:${terraformBinDir}" >> /home/vagrant/.bashrc
 # Check if the user already has a private directory for sensitive files.
 if [ ! -d /opt/wyb/private ]; then
   echo "Creating a private directory for sensitive files"
-  mkdir -p /opt/washyobutt/private
+  mkdir -p /opt/wyb/private
 fi
 
 #Look for a wyb deployer key
-if [[ ! -f /opt/wyb/private/wyb_provisioner ]] && [[ ! -f /opt/wyb/private/wyb_provisioner.pub ]]; then
-  echo "No provisioning key found"
-  ssh-keygen -f /opt/wyb/private/wyb_provisioner -t rsa -b 4096 -C "wyb_provisioning" -q -N ""
-  wybProvisionerPub=`cat /opt/wyb/private/wyb_provisioner.pub`
-  if [ -f /opt/wyb/terraform/vpc_public/terraform.tfvars ]; then
-    echo "appending new public key to your terraform.tfvars"
-    echo "provisionerPublicKey = \"${wybProvisionerPub}\"" >> /opt/wyb/terraform/vpc_public/terraform.tfvars
-  else
-    touch /opt/wyb/terraform/vpc_public/terraform.tfvars
-    echo "provisionerPublicKey = \"${wybProvisionerPub}\"" >> /opt/wyb/terraform/vpc_public/terraform.tfvars
-  fi
-else
-  # Relying on the user to know what they're doing.
-  echo "You have a provisioning key, please make sure it's defined in you terraform.tfvars as provisionerPublicKey"
+checkForDeployerKey
+if [ ${deployerKeyExists} = false ]; then
+  createDeployerKey
 fi
 
 # Need to do some work on the keys for github.  First check if .ssh/config exists
 if [[ -f /home/vagrant/.ssh/config ]]; then
-  echo "SSH config exists"
-  #Now check if there's a config for github already.  We're erroring on the side of not messing with the user's setup.
+  #check if there's a config for github already.  We're erroring on the side of not messing with the user's setup throughout this process.
   if ! grep -i "Hostname github.com" /home/vagrant/.ssh/config; then
-    cat <<EOF >> /home/vagrant/.ssh/config
-    ${githubSshConfig}
-EOF
+    addGithubSSHConfig
   fi
 else
   touch /home/vagrant/.ssh/config
-  cat <<EOF >> /home/vagrant/.ssh/config
-  ${githubSshConfig}
-EOF
+  addGithubSSHConfig
+fi
 
-  #Our github ssh config is looking for /opt/wyb/private/wyb, so we'll check if that file is there.  If not, we'll create an ssh key with that name.
-  if [[ ! -f ${githubPrivateKey} ]]; then
-    ssh-keygen -f ${githubPrivateKey} -t rsa -b 4096 -C "wyb" -q -N ""
-    echo "Created a private key for you at ${githubPrivateKey}.  Your ssh config has been updated to use this key for github access on the vagrant VM.  You will need to add the public key from ${githubPrivateKey}.pub to your github account, and request access as a collaborator to the project.  Feel free to use your own and reconfigure ssh as needed."
-  fi
+#Our github ssh config is looking for /opt/wyb/private/wyb, so we'll check if that file is there.  If not, we'll create an ssh key with that name.
+checkForGithubKey
+if [[ ${githubKeyExists} = false ]]; then
+  createGithubKey
 fi
 
 #Link the .git hooks dir to the project hooks dir
 if [[ ! -L /opt/wyb/.git/hooks ]]; then
-  echo "not a symlink"
-else
-  echo "is symlink"
+  rm -rf /opt/wyb/.git/hooks
+  cd /opt/wyb/.git
+  ln -s ../hooks .
 fi
 
 #Install python2.7 and the pip packages I'm using
@@ -127,3 +167,31 @@ sudo apt-get -y install python2.7 python-pip
 pip install tweepy
 pip install configparser
 pip install awscli
+
+## Do some checks so we can inform the user of next steps
+checkForAWSCreds
+checkForTwitterCreds
+
+#Inform the user of next steps
+echo "************************************  SUMMARY *****************************************"
+
+if [ ${deployerKeyExists} = false ]; then
+  echo "I created a deployer key for you in /opt/wyb/private and appended the public key to your terraform.tfvars file as provisionerPublicKey.  This key is for provisioning only"
+else
+  echo "You have a provisioning key already.  The public (.pub) should be in your terraform.tfvars file as provisionerPublicKey."
+fi
+
+if [[ ${githubKeyExists} = false ]]; then
+  echo "I automatically set your ssh configuration to use the key ${githubPrivateKey}, and I created a keypair for you.  If you'd like to use this for github access, you'll need to upload the public key (.pub) to your github account.  Otherwise, please edit your ssh settings in /home/vagrant/.ssh/config to use your own private key."
+else
+  echo "I set up your /home/vagrant/.ssh/config file to use your existing key /opt/wyb/private/wyb for access to github."
+fi
+
+if [[ ${twitterCredentialsExist} = false ]]; then
+  echo "You will need the twitter credentials property files for access to the twitter commit hook.  If you'd like to use it, please contact Matt."
+fi
+
+if [[ ${AWSCredsExist} = false ]]; then
+  echo "Please contact Matt for a WYB Amazon account.  Put your access and secret keys in the terraform.tfvars file(s) as accessKey and secretKey respectively" 
+fi
+
