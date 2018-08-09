@@ -184,7 +184,7 @@ fi
 if [[ ${githubKeyExists} = false ]]; then
   echo "I automatically set your ssh configuration to use the key ${githubPrivateKey}, and I created a keypair for you.  If you'd like to use this for github access, you'll need to upload the public key (.pub) to your github account.  Otherwise, please edit your ssh settings in /home/vagrant/.ssh/config to use your own private key."
 else
-  echo "I set up your /home/vagrant/.ssh/config file to use your existing key /opt/wyb/private/wyb for access to github."
+  echo "I set up your /home/vagrant/.ssh/config file to use your existing key ${githubPrivateKey} for access to github."
 fi
 
 if [[ ${twitterCredentialsExist} = false ]]; then
