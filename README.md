@@ -1,5 +1,5 @@
 # washyobutt
-Yes, it's' supposed to be like that.
+The premiere website for hiphop-based personal hygiene advice.
 
 ## Introduction
 Lately my job has been writing ansible to install and configure Weblogic, JBoss, Endeca, and apache environments for customers who run ecommerce sites based on Oracle Commerce, or ATG.  It’s a fine job; I’ve gotten comfortable with ansible and I’ve learned some things along the way.
