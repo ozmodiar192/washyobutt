@@ -670,7 +670,7 @@ If you write udev rules, make sure you always use full paths; just running verac
 
 Finally, I moved my terraform.tfvars to /private and aliased terraform apply to terraform apply --var-file ../../private/terraform.tfvars.  It's okay to do this because you'll always be running terraform from the directory with your .tf files in it, so the path is effectively known.  You can point tf at a specific .tf file in any directory, but my function will handle that.  
 
-I also put the function to alias terraform in my dev environment setup.  When I have more VPCs, I'll need to rename or move the terraform.tfvars and find a way to make terraform use the right one based on what VPC I'm working on.  I don't want my terraform.tfvars to be global for all my terraform environments; I'd rather keep it modular so each vpc has it's own terraform.tfvars file.
+I also put the function to alias terraform in my dev environment provisioning.sh file.  When I have more VPCs, I'll need to rename or move the terraform.tfvars and find a way to make terraform use the right one based on what VPC I'm working on.  I don't want my terraform.tfvars to be global for all my terraform environments; I'd rather keep it modular so each vpc has it's own terraform.tfvars file.
 
 It's in my provision.sh for my dev environment, but here's the handy function that automatically points terraform to my tfvars:
 
