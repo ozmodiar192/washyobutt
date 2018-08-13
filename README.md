@@ -650,3 +650,47 @@ Once I got github working, I did a quick install of python.  Why no virtalenv? I
 I can now bring up a fully-working development environment by running setupDevenv.sh, followed by vagrant up, and then access it with vagrant ssh.  Once in there, I verified I can do a terraform destroy and a terraform apply.  In short, I'm well on my way to ephemeral environments from dev to production.  Granted I only have dev and production, but it still sounds cool to say.
 
 If you look at provision.sh in my devEnv directory, you'll see I spent some time to write functions to check if all the necessary pieces are in place, and then summarized next steps for the user.  This will be a bit of a maintenance headache, but it's worth doing for a few reasons.  If I bring a new person on, I want them to know what they need to do to work on my project.  My provisioning file also serves as a central place to track all the requirements for my project.  If I keep my dev environment provisioning script updated, I'll never need to meander around trying to figure out what I had to do to make my shit work; it'll all be there right.  I need tweepy.  I need my twitter credentials.  I need my AWS keys in my terraform.tfvars.  It's all right there in my provisioning.sh file.  I don't need to document "getting started on your washyobutt.com adventure" at all, and I will consume my own record keeping periodically by tearing down and recreating my vagrant environment.  It's convience and an excuse not to document, all in one package.
+
+## Housekeeping
+I made a quick image in Gimp for the site, just because I didn't like the flashing text.  The idea of messing with CSS some more wasn't appealing, so I made a quick image for it instead.
+
+I also started to feel a little bit negligent about having so much sensitive data in my project /private directory.  It's got keys, my amazon creds, my twitter creds.  I've been really adamant about not spreading stuff out all over the file system, which I think is good from a usability standpoint, but it's putting all my eggs in one basket from a security standpoint.  Plus, it's not very portable.  I can get my project from git, but I'd need to recreate most of my sensitive files.
+
+I decided to make an encrypted USB drive for the purpose of storing my sensitive documents.  I could potentially work on any number of systems/operating systems, so I decided to use veracrypt to create an encrypted volume within a file on a USB stick.  I can move all my sensitive documents to the encrypted pseudo-volume, and then mount it into my project /private dir.  The trade-off is a small amount of administration overhead and a loss of flexibility, but I'll feel better having my sensitive data a little more locked down.
+
+I tried to make a udev rule to automatically mount my veracrypt volume to my private dir when I plug in my usb drive, but it didn't work right.  I spent some time messing with it, but I think ultimately it just wasn't in the cards.  Udev is not happy with anything that takes more than a second or two, so that could be why.  Instead of messing around with backgrounding it, I wrote a simple bash script that I'll manually run to mount it.
+```
+veracrypt /media/matt/secureData/wyb_private /home/matt/projects/wyb/private
+```
+I can run the script and it'll do the mount for me automatically after a little checking to make sure the drive is there.  It's nice that Ubuntu always mounts my usb device to the same place.  Since I couldn't handle the defeat of not being able to write a udev rule, I wrote one that dismounts the encrypted volume when the USB drive is removed.  That works fine, since you don't need any priviledges or to run an external program to unmount stuff.  Here's the rule, which goes in /etc/udev/rules.d.
+```
+KERNEL=="sd\*", ACTION=="remove", ATTRS{idVendor}=="058f", ATTRS{idProduct}=="6387", RUN+="/usr/bin/veracrypt -d"
+```
+If you write udev rules, make sure you always use full paths; just running veracrypt -d wouldn't work.  I got the idVentor and idProduct from lsusb.
+
+Finally, I moved my terraform.tfvars to /private and aliased terraform apply to terraform apply --var-file ../../private/terraform.tfvars.  It's okay to do this because you'll always be running terraform from the directory with your .tf files in it, so the path is effectively known.  You can point tf at a specific .tf file in any directory, but my function will handle that.  
+
+I also put the function to alias terraform in my dev environment setup.  When I have more VPCs, I'll need to rename or move the terraform.tfvars and find a way to make terraform use the right one based on what VPC I'm working on.  I don't want my terraform.tfvars to be global for all my terraform environments; I'd rather keep it modular so each vpc has it's own terraform.tfvars file.
+
+It's in my provision.sh for my dev environment, but here's the handy function that automatically points terraform to my tfvars:
+
+```
+function terraform (){
+  if [ -f ../../private/terraform.tfvars ]; then
+    case $* in 
+      apply* ) shift 1; command terraform apply -var-file=../../private/terraform.tfvars "$@" ;;
+      destroy* ) shift 1; command terraform destroy -var-file=../../private/terraform.tfvars "$@" ;;
+    esac
+  else
+    echo "Couldn't find tfvars file"
+    command terraform "$@"
+fi
+}
+```
+
+There's some useful bashery in there.  There's a case statement that looks at $\*, which is a string-version of the arguments passed into the command.  If it matches the case statement, it'll do the jazz I defined within the case, which is pretty similar in both my cases.  Shift moves all the arguments over one to the left, so we're essentially dumping the apply.  Anything else will be left, starting at $1 (the first argument).  Then we use "command", which tells bash to not do it's typical function lookup.  If I write a function for terraform and then allow bash to look for functions named terraform within it, I end up in a recusive loop. Command tells it "just look on the path or in your built in commands, no functions!"  Then I run terraform with my -var-files= parameter, and append what's left in the arguments, which bash lets you reference as $@.  
+
+The difference between $\* and $@ is that $\* is a string, and $@ is an array.  When I tell case to look at $\*, it's looking at my arguments within a big ol' string.  When I use $@, it's appending each argument as a separate item from an array. This is largely inconsequential for my terraform function because the arguments consistently structured, but if you have a more complicated string of commands with quotations marks you'd need to manage how you're addressing them with care. This is a long way to say "This is how the person on stackoverflow did it so this is how I'm leaving it." 
+
+I also put an if statement in there that checks if the terraform.tfvars file exists.  If it doesn't, I just use the original terraform command the user issued and let terraform deal with the errors should they occur.  That means if I happen to be in a different directory or doing some weird thing with terraform, it won't attempt to use my -var-file version of terraform unless the var file is there.
+

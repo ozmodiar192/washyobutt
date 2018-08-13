@@ -19,6 +19,19 @@ Host github.com
     PreferredAuthentications publickey
     IdentityFile ${githubPrivateKey}
     IdentitiesOnly yes"
+terraformFunc="
+function terraform (){
+  if [ -f ../../private/terraform.tfvars ]; then
+    case \$* in 
+      apply* ) shift 1; command terraform apply -var-file=../../private/terraform.tfvars \"\$@\" ;;
+      destroy* ) shift 1; command terraform destroy -var-file=../../private/terraform.tfvars \"\$@\" ;;
+    esac
+  else
+    echo \"Couldn't find tfvars file\"
+    command terraform \"\$@\"
+fi
+}
+"
 
 
 ###################### Functions
@@ -57,6 +70,21 @@ downloadTerraform(){
     exit 1
   fi
 }
+
+updateBashAlias(){
+  if [[ -f /home/vagrant/.bash_aliases ]]; then
+cat <<EOF >> /home/vagrant/.bash_aliases
+${terraformFunc}
+EOF
+  else
+    touch /home/vagrant/.bash_aliases
+cat <<EOF >> /home/vagrant/.bash_aliases
+${terraformFunc}
+EOF
+fi
+}
+
+    
 
 checkForDeployerKey(){
   if [[ -f /opt/wyb/private/wyb_provisioner ]] && [[ -f /opt/wyb/private/wyb_provisioner.pub ]]; then
@@ -167,6 +195,8 @@ sudo apt-get -y install python2.7 python-pip
 pip install tweepy
 pip install configparser
 pip install awscli
+
+updateBashAlias
 
 ## Do some checks so we can inform the user of next steps
 checkForAWSCreds
