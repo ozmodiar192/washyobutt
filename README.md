@@ -694,3 +694,11 @@ The difference between $\* and $@ is that $\* is a string, and $@ is an array.  
 
 I also put an if statement in there that checks if the terraform.tfvars file exists.  If it doesn't, I just use the original terraform command the user issued and let terraform deal with the errors should they occur.  That means if I happen to be in a different directory or doing some weird thing with terraform, it won't attempt to use my -var-file version of terraform unless the var file is there.
 
+## Converting to Docker
+I knew my website wouldn't be regarded highly in devops circles if it didn't use docker, so I made some changes to it to run in a basic docker container.  I also did some general restructuring within my web content and terraform directories.
+
+First I renamed ec2.tf to wybWeb.tf, because I may have have other ec2 instances some day and I may want to use different provisioning scripts for each one.  I converted my inline terraform provisioning commands to a script.  I named the script the same as the tf file so it's clear what it's for.  I had a problem with group membership changes not being reflected when the script executes, so I left two inline commands to create the docker group and add the ubuntu user to it.  The alternative would've been using sudo for all the docker commands, but I would rather keep everything running as the ubuntu user as much as possible.
+
+Now instead of installing the nginx package with apt and linking my content, I'm installing Docker and starting the official nginx docker container.  The -v option mounts the checked-out web content from the ec2 instance into the nginx content directory, which is /usr/share/nginx/html for the container.  I realize it was previously /var/www/html when I was not containerized; that's the default for debian-based distributions.  The nginx container users alpine, which is a tiny linux distro that's great for containers.
+
+Right now my usage of docker is super simple; I'm not managing any of my own images or managing a dockerfile.  I may find a way to make it more complicated as I go.  I would be remissed if I didn't user kubernetes for SOMETHING, after all.
