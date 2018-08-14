@@ -9,20 +9,23 @@ resource "aws_instance" "wybSingleton" {
   tags {
     Name                      = "washyobuttSingleton"
   }
+
 # provisioning commands
   provisioner "remote-exec" {
     inline = [
-      "sudo apt-get update",
-      "sudo apt-get -y install nginx",
-      "git clone https://github.com/ozmodiar192/washyobutt.git",
-      "sudo ln -s ~/washyobutt/content/* /var/www/html/",
-      "sudo service nginx start",
+     "sudo groupadd docker",
+     "sudo usermod -a -G docker ubuntu",
     ]
+}
+
+  provisioner "remote-exec" {
+    script = "./wybWebProvision.sh"
+}
+
 # Define connection for provisioner
     connection {
       type        = "ssh"
       user        = "ubuntu"
       private_key = "${file("../../private/wyb_provisioner")}"
     }
-  }
 }

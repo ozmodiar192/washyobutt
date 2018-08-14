@@ -25,6 +25,7 @@ function terraform (){
     case \$* in 
       apply* ) shift 1; command terraform apply -var-file=../../private/terraform.tfvars \"\$@\" ;;
       destroy* ) shift 1; command terraform destroy -var-file=../../private/terraform.tfvars \"\$@\" ;;
+      *) command terraform \"\$@\" ;;
     esac
   else
     echo \"Couldn't find tfvars file\"
