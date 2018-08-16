@@ -72,7 +72,14 @@ downloadTerraform(){
   fi
 }
 
-updateBashAlias(){
+installTerraform(){
+  mkdir -p ${terraformBinDir}
+  unzip -o terraform_${desiredTerraformVersion}_linux_amd64.zip -d ${terraformBinDir}
+  echo "export PATH=\${PATH}:${terraformBinDir}" >> /home/vagrant/.bashrc
+  terraformAlias
+}
+
+terraformAlias(){
   if [[ -f /home/vagrant/.bash_aliases ]]; then
 cat <<EOF >> /home/vagrant/.bash_aliases
 ${terraformFunc}
@@ -83,6 +90,18 @@ cat <<EOF >> /home/vagrant/.bash_aliases
 ${terraformFunc}
 EOF
 fi
+}
+
+installNodejs(){
+  sudo apt-get install -y nodejs
+  sudo apt-get install -y npm
+}
+
+installPython(){
+  sudo apt-get -y install python2.7 python-pip
+  pip install tweepy
+  pip install configparser
+  pip install awscli
 }
 
     
@@ -143,16 +162,19 @@ EOF
 
     
 ########################## MAIN
-# Install zip
+
+# apt update and install zip
+sudo apt-get update
 sudo apt-get install -y zip
 
 # Create a /bin directory to store the terraform executable
-mkdir -p ${terraformBinDir}
 if [ ! -f terraform_${desiredTerraformVersion}_linux_amd64.zip ]; then
   downloadTerraform
 fi
-unzip -o terraform_${desiredTerraformVersion}_linux_amd64.zip -d ${terraformBinDir}
-echo "export PATH=\${PATH}:${terraformBinDir}" >> /home/vagrant/.bashrc
+installTerraform
+
+# Install python, pip, and my packages
+installPython
 
 # Check if the user already has a private directory for sensitive files.
 if [ ! -d /opt/wyb/private ]; then
@@ -189,15 +211,6 @@ if [[ ! -L /opt/wyb/.git/hooks ]]; then
   cd /opt/wyb/.git
   ln -s ../hooks .
 fi
-
-#Install python2.7 and the pip packages I'm using
-sudo apt-get update
-sudo apt-get -y install python2.7 python-pip
-pip install tweepy
-pip install configparser
-pip install awscli
-
-updateBashAlias
 
 ## Do some checks so we can inform the user of next steps
 checkForAWSCreds
