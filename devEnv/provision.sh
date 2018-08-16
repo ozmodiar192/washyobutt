@@ -10,7 +10,7 @@ desiredTerraformVersion="0.11.7"
 ## The location we want to install terraform
 terraformBinDir="/home/vagrant/bin"
 ## The path to the private key we want to make github use
-githubPrivateKey="/opt/wyb/private/wyb"
+githubPrivateKey="/opt/wyb/private/wyb_github"
 ## The github-specific config for the .ssh config file
 githubSSHConfig="
 Host github.com
