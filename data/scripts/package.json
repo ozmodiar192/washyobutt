@@ -1,0 +1,29 @@
+{
+  "name": "wyb_datascripts",
+  "version": "1.0.0",
+  "description": "Data management scripts for washyobutt.com",
+  "main": "createTable.js",
+  "dependencies": {
+    "aws-sdk": "^2.304.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "node test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ozmodiar192/washyobutt.git"
+  },
+  "keywords": [
+    "dynamodb",
+    "nodejs",
+    "hygiene",
+    "hiphop"
+  ],
+  "author": "Matt Herrick",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ozmodiar192/washyobutt/issues"
+  },
+  "homepage": "https://github.com/ozmodiar192/washyobutt#readme"
+}

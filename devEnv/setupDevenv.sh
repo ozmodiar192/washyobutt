@@ -38,5 +38,6 @@ fi
 if ! grep -xq "export VAGRANT_CWD=${VAGRANT_CWD}" ~/.bash_profile; then
   echo "export VAGRANT_CWD=${VAGRANT_CWD}" >> ~/.bash_profile
   printf "\n\n########        HEY YOU       ########\n#            Please execute:         #\n#  source ~/.bash_profile            #\n#            before executing:       #\n#  vagrant up                        #\n######################################\n\n" 
-
+else
+  vagrant up
 fi
