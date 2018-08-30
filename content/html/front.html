@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+
+<body onload="getQuote()">
+    <script>
+      function getQuote() {
+        fetch('http://localhost:3000/getQuote')
+        .then(function(response) { 
+	  // Convert to JSON
+          return response.json();
+        })
+        .then(function(data) {
+          quoteResp = '<strong>' + data.quote.S + '</strong>';
+          console.log(quoteResp, " was your quote response")
+          document.getElementById("quote").innerHTML = quoteResp;
+          })
+      };
+    </script> 
+   <a href="https://github.com/ozmodiar192/washyobutt">How it's built</a>
+
+ <style>
+   .container {
+      position: relative;
+      text-align: center;
+      color: white;
+      text-shadow: -1px 0 black, 0 1px black, 1px 0 black, 0 -1px black;
+      font-size: 50px
+    }
+   .centered {
+     position: absolute;
+     top: 50%;
+     left: 50%;
+     transform: translate(-50%, -50%);
+    }
+  
+  </style>
+ </head>
+  <div class="container">
+   <img src='background.jpg' alt="Hmm, that's a hard one to say" style="width:100%;">
+   <div id="quote" class="centered"></div>
+  </div>
+  <a href="https://github.com/ozmodiar192/washyobutt">How it's built</a>
+  <p id="quote"></p>
+ </body>
+</html>
