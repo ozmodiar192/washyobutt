@@ -1,13 +1,13 @@
 [
   {
     "quoteID" : 1,
-    "quote" : "It's important to practice good hygiene\nat least if you wanna run with my team",
+    "quote" : "It's important to practice good hygiene<br />at least if you wanna run with my team",
     "title" : "If You Must",
     "artist" : "Del the Funky Homosapien"
   },
   {
     "quoteID" : 2,
-    "quote" : "You gotta wash your ass,\nif you must\nYou gotta wash your hair,\nif you must\nYou gotta brush your teeth,\nif you must\nOr else you'll be funky",
+    "quote" : "You gotta wash your ass,<br />if you must<br />You gotta wash your hair,<br />if you must<br />You gotta brush your teeth,<br />if you must<br />Or else you'll be funky",
     "title" : "If You Must",
     "artist" : "Del the Funky Homosapien"
   },
@@ -19,49 +19,49 @@
   },
   {
     "quoteID" : 4,
-    "quote" : "I go so deep on your ass, you'll be submerged\nLike you need to do in water\n'cause you smell like a turd",
+    "quote" : "I go so deep on your ass, you'll be submerged<br />Like you need to do in water<br />'cause you smell like a turd",
     "title" : "If You Must",
     "artist" : "Del the Funky Homosapien"
   },
   {
     "quoteID" : 5,
-    "quote" : "Wanna cap? Get some courage, your feet smell lurid\nGo look it up, and while you're at it, get a cup\nAnd squeeze the sweat out your sweatshirt and drink it or gargle",
+    "quote" : "Wanna cap? Get some courage, your feet smell lurid<br />Go look it up, and while you're at it, get a cup<br />And squeeze the sweat out your sweatshirt and drink it or gargle",
     "title" : "If You Must",
     "artist" : "Del the Funky Homosapien"
   },
   {
     "quoteID" : 6,
-    "quote" : "check, yourself\nRespect yourself\nAnd wash your mothafuckin' body 'fore your sweatshirt melt",
+    "quote" : "check, yourself<br />Respect yourself<br />And wash your mothafuckin' body 'fore your sweatshirt melt",
     "title" : "If You Must",
     "artist" : "Del the Funky Homosapien"
   },
   {
     "quoteID" : 7,
-    "quote" : "check, yourself\nRespect yourself\nAnd wash your mothafuckin' body 'fore your sweatshirt melt",
+    "quote" : "check, yourself<br />Respect yourself<br />And wash your mothafuckin' body 'fore your sweatshirt melt",
     "title" : "If You Must",
     "artist" : "Del the Funky Homosapien"
   },
   {
     "quoteID" : 8,
-    "quote" : "The thing I'm talking about is an essence\nA foreign fragrance with a presence\nThat you can't see with the naked eye\nBut to the nose it's a nuisance",
+    "quote" : "The thing I'm talking about is an essence<br />A foreign fragrance with a presence<br />That you can't see with the naked eye<br />But to the nose it's a nuisance",
     "title" : "The Dragon",
     "artist" : "Biz Markie"
   },
   {
     "quoteID" : 9,
-    "quote" : "There are ways of preventing this\nCheck your hygiene and your dentist\nYou might think I'm messing, but this is a lesson\nGodliness is cleanliness",
+    "quote" : "There are ways of preventing this<br />Check your hygiene and your dentist<br />You might think I'm messing, but this is a lesson<br />Godliness is cleanliness",
     "title" : "The Dragon",
     "artist" : "Biz Markie"
   },
   {
     "quoteID" : 10,
-    "quote" : "You're sitting there baffled and puzzled\nWhatever you have, you wish you was muzzled\nBut if you want a clue,\nbetween me and you\nIt could be the beverage you guzzle",
+    "quote" : "You're sitting there baffled and puzzled<br />Whatever you have, you wish you was muzzled<br />But if you want a clue,<br />between me and you<br />It could be the beverage you guzzle",
     "title" : "The Dragon",
     "artist" : "Biz Markie"
   },
   {
     "quoteID" : 11,
-    "quote" : "So I'ma end it off like this\nBefore you give somebody a kiss\n For the one you adore,\ncheck them before\nYou get a crazy whiff",
+    "quote" : "So I'ma end it off like this<br />Before you give somebody a kiss<br /> For the one you adore,<br />check them before<br />You get a crazy whiff",
     "title" : "The Dragon",
     "artist" : "Biz Markie"
   }

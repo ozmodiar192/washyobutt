@@ -66,8 +66,7 @@ downloadTerraform(){
   # Check that the fingerprint of the gpg matches what's on the hashicorp site
   checkFingerprint ${hashiPublicKeyID} ${hashiFingerprint}
 
-   # Verify the list of terraform checksums against the signature. The download itself is not signed, only the sums.  Therefore, if the sums are correct, we can checksum the file and trust the download.
-  verifyChecksums ${terraformSigFile} ${terraformSumFile}
+   # Verify the list of terraform checksums against the signature. The download itself is not signed, only the sums.  Therefore, if the sums are correct, we can checksum the file and trust the download.  verifySignature ${terraformSigFile} ${terraformSumFile}
 
   # Now that we know the sha sums file is correct, we can check the sum of the download against it.
   verifyDownload ${terraformZipFile} ${terraformSumFile}
@@ -87,7 +86,6 @@ downloadDynamoLocal(){
 checkFingerprint(){
   pubKeyID=${1}
   expectedFingerprint=${2}
-  echo "comparing against ${expectedFingerprint}"
   # Get the key from pool.sks-keyservers.net
   gpg --keyserver pool.sks-keyservers.net --recv-key ${pubKeyID}
 
@@ -102,7 +100,7 @@ checkFingerprint(){
 }
 
 #Takes a signature file, and a target file to check against the signature
-verifyChecksums(){
+verifySignature(){
   sigFile=${1}
   targetFile=${2}
   if gpg --verify ${sigFile}  ${targetFile} ; then
@@ -146,7 +144,7 @@ EOF
   fi
 }
 
-#Aliases terraform to the function that automatically includes terraform.tfvars
+#Aliases terraform to a function that automatically includes terraform.tfvars
 terraformAlias(){
   if [[ -f /home/vagrant/.bash_aliases ]]; then
 cat <<EOF >> /home/vagrant/.bash_aliases
@@ -253,16 +251,17 @@ EOF
 sudo apt-get update
 sudo apt-get install -y zip
 
-# Create a /bin directory to store the terraform executable
+# Download and install terraform
 if [ ! -f ${terraformZipFile} ]; then
   downloadTerraform
 fi
 installFromZip ${terraformZipFile}
 terraformAlias
 
+# Add bin dir to the path 
 echo "export PATH=\${PATH}:${binDir}" >> /home/vagrant/.bashrc
 
-#Install the local dyamoDB client
+#Install the local dyamoDB client, create an alias, and install java
 downloadDynamoLocal
 installFromZip ${dynamoZipFile}
 startDynamoAlias
@@ -298,7 +297,7 @@ else
   addGithubSSHConfig
 fi
 
-#Our github ssh config is looking for /opt/wyb/private/wyb, so we'll check if that file is there.  If not, we'll create an ssh key with that name.
+#Our github ssh config is looking for ${githubPrivateKey}, so we'll check if that file is there.  If not, we'll create an ssh key with that name.
 checkForGithubKey
 if [[ ${githubKeyExists} = false ]]; then
   createGithubKey
