@@ -139,7 +139,6 @@ router.get('/getQuote', function(req, res, next) {
       });
       quote.then(function(data){
         myQuote = data
-        console.log("Got quote ", myQuote)
         res.header('Access-Control-Allow-Origin', '*')
         res.send(myQuote)
       });

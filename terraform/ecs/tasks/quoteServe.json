@@ -1,7 +1,7 @@
 [
   {
     "name": "wybQSContainer",
-    "image": "054218007579.dkr.ecr.us-east-1.amazonaws.com/wyb-repo:quoteserve-48b2978-debug",
+    "image": "054218007579.dkr.ecr.us-east-1.amazonaws.com/wyb-repo:quoteserve-0c32ef0-debug",
     "cpu": 256,
     "memory": 512,
     "essential": true,
