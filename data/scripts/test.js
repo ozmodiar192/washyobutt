@@ -1,9 +1,15 @@
 var AWS = require("aws-sdk");
 
+// AWS.config.update({
+//   region: "us-west-2",
+//   endpoint: "http://localhost:8000"
+// });
+
 AWS.config.update({
-  region: "us-west-2",
-  endpoint: "http://localhost:8000"
+    region: "us-east-1",
+    endpoint: "https://dynamodb.us-east-1.amazonaws.com"
 });
+
 
 var docClient = new AWS.DynamoDB.DocumentClient();
 var dynamodb = new AWS.DynamoDB();
@@ -45,8 +51,8 @@ function onScan(err, data) {
            console.log(
                 "\nQuote ID: ", quote.quoteID, "\n",
                 "Arist: ", quote.artist, "\n", 
-                "song", quote.title, "\n",
-                "Quote:\n", quote.quote), "\n";
+                "song: ", quote.title, "\n",
+                "Quote: ", quote.quote), "\n";
                
         });
 

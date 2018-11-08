@@ -1,4 +1,4 @@
-#!/bin/bash
+#/bin/bash
 
 #####################Variables
 
@@ -182,6 +182,13 @@ installPython(){
   pip install configparser
   pip install awscli
 }
+
+#Installs Docker and adds vagrant to the docker group
+installDocker(){
+  sudo apt-get install -y docker.io
+  sudo usermod -a -G docker vagrant
+}
+
     
 # Checks for a provisioning key for terraform to use to provision ec instances.
 checkForDeployerKey(){
@@ -211,11 +218,24 @@ checkForTwitterCreds(){
 }
 
 # Checks if amazon credentials are defined in terraform.tfvars
-checkForAWSCreds(){
+checkForAWSTFCreds(){
   if find /opt/wyb -iname terraform.tfvars -print0 | xargs -0 grep accessKey > /dev/null 2>&1  && find /opt/wyb -iname terraform.tfvars -print0 | xargs -0 grep secretKey > /dev/null 2>&1 ; then
-    AWSCredsExist=true
+    AWSTFCredsExist=true
   else
-    AWSCredsExist=false
+    AWSTFCredsExist=false
+  fi
+}
+
+# Checks for a credentials file in private.  If found, copy it to vagrant user's .aws and secure it
+checkForAWSCredsFile(){
+  if [[ -f /opt/wyb/private/credentials ]]; then
+    AWSCredsFileExists=true
+    mkdir -p /home/vagrant/.aws
+    cp /opt/wyb/private/*credentials /home/vagrant/.aws
+    chmod 700 /home/vagrant/.aws
+    chmod 600 /home/vagrant/.aws/*
+  else
+    AWSCredsFileExists=false
   fi
 }
 
@@ -261,11 +281,13 @@ terraformAlias
 # Add bin dir to the path 
 echo "export PATH=\${PATH}:${binDir}" >> /home/vagrant/.bashrc
 
+# Add aws config file path to the environment
+echo "export AWS_CONFIG_FILE=/opt/wyb/private/credentials" >> /home/vagrant/.bashrc
+
 #Install the local dyamoDB client, create an alias, and install java
 downloadDynamoLocal
 installFromZip ${dynamoZipFile}
 startDynamoAlias
-createDynamoDummyCreds
 sudo apt-get install -y default-jre
 
 # Install python, pip, and my packages
@@ -273,6 +295,9 @@ installPython
 
 #Install nodejs and npm
 installNodejs
+
+#Install docker
+installDocker
 
 # Check if the user already has a private directory for sensitive files.
 if [ ! -d /opt/wyb/private ]; then
@@ -311,8 +336,9 @@ if [[ ! -L /opt/wyb/.git/hooks ]]; then
 fi
 
 ## Do some checks so we can inform the user of next steps
-checkForAWSCreds
+checkForAWSTFCreds
 checkForTwitterCreds
+checkForAWSCredsFile
 
 
 #Inform the user of next steps.
@@ -334,7 +360,10 @@ if [[ ${twitterCredentialsExist} = false ]]; then
   echo "You will need the twitter credentials property files for access to the twitter commit hook.  If you'd like to use it, please contact Matt."
 fi
 
-if [[ ${AWSCredsExist} = false ]]; then
+if [[ ${AWSTFCredsExist} = false ]]; then
   echo "Please contact Matt for a WYB Amazon account.  Put your access and secret keys in the terraform.tfvars file(s) as accessKey and secretKey respectively" 
+fi
+if [[ ${AWSCredsFileExists} = false ]]; then
+  echo "You don't have an AWS Credentials file in your private directory." 
 fi
 

@@ -7,8 +7,9 @@ var Promise = require("promise");
 
 // Config for dynamo stuffs
 AWS.config.update({
-  region: "us-west-2",
-  endpoint: "http://localhost:8000" });
+  region: "us-east-1",
+//  endpoint: "http://localhost:8000" });
+  endpoint: "http://dynamodb.us-east-1.amazonaws.com" });
 
 //an instance of dynamodb
 var dynamodb = new AWS.DynamoDB(); 
@@ -46,10 +47,11 @@ function setQuoteParams(rand){
 // Gets the item count from the table
 function getNumQuotes(countParams, cb) {
   dynamodb.getItem(countParams, function(err, data) { if (err) {
-    console.error("Unable to query. Error:", JSON.stringify(err, null, 2));
+    cons
     return cb(new Error("ERROR IN getNumQuotes"),null);
       } else {
           qtyQuotes = data.Item.qtyQuotes.N
+          console.log("Got ", qtyQuotes, " quotes")
           cb(null,qtyQuotes);
       }; 
    });
@@ -124,6 +126,7 @@ router.get('/getQuote', function(req, res, next) {
       //get the random number and pass it into the db params
       var myRand = getRandomInt(1,randMax)
       setQuoteParams(myRand)
+      console.log("Using random number ", myRand)
       const quote = new Promise(function(resolve, reject) {
         getQuote(quoteParams, function (err,data) {
           if (err) {
@@ -136,6 +139,7 @@ router.get('/getQuote', function(req, res, next) {
       });
       quote.then(function(data){
         myQuote = data
+        console.log("Got quote ", myQuote)
         res.header('Access-Control-Allow-Origin', '*')
         res.send(myQuote)
       });
@@ -159,7 +163,7 @@ router.get('/updateCount', function(req, res, next) {
     randMax = (data)
     console.log("Set max random number to ", randMax)
     res.header('Access-Control-Allow-Origin', '*')
-    res.send("Completed, set max to ", randMax)
+    res.send(randMax)
   })
 });
 

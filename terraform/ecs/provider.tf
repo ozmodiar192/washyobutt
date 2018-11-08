@@ -1,6 +1,6 @@
 # Configure access to AWS as my provider
 provider "aws" {
-  region     = "${var.region}"
+  region     = "${var.region1}"
   access_key = "${var.accessKey}"
   secret_key = "${var.secretKey}"
   assume_role {

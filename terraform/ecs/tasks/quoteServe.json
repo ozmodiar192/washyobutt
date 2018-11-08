@@ -1,0 +1,24 @@
+[
+  {
+    "name": "wybQSContainer",
+    "image": "054218007579.dkr.ecr.us-east-1.amazonaws.com/wyb-repo:quoteserve-48b2978-debug",
+    "cpu": 256,
+    "memory": 512,
+    "essential": true,
+    "portMappings": [
+      {
+        "containerPort": 3000,
+        "protocol": "tcp",
+        "hostPort": 3000 
+      }
+    ],
+    "logConfiguration": {
+    "logDriver": "awslogs",
+    "options": {
+    "awslogs-group": "/ecs/wybQSTask",
+    "awslogs-region": "us-east-1",
+    "awslogs-stream-prefix": "ecs"
+      }
+    }
+  }
+]
